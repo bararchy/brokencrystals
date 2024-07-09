@@ -35,7 +35,7 @@
     "@sectester/repeater": "^0.16.5",
     "@sectester/reporter": "^0.16.5",
     "@sectester/runner": "^0.16.5",
-    "@sectester/scan": "^0.16.5",
+    "@sectester/scan": "^0.31.0",
     "axios": "^0.21.2",
     "bcrypt": "^5.0.0",
     "class-transformer": "^0.5.1",
