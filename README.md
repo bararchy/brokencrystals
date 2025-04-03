@@ -67,6 +67,19 @@ Full configuration & usage examples can be found in our [demo project](https://g
   - **JWK Rogue Key** - We make a new JSON with empty values, hash it, and set it directly in the Header, and we then use our private key to sign the JWT (implemented in designated endpoint as described in Swagger).
 
 - **Brute Force Login** - Checks if the application user is using a weak password. The default setup contains user = _admin_ with password = _admin_
+  <details>
+    <summary>Example Exploitation</summary>
+
+  To demonstrate brute force login, you can use the following `curl` command:
+
+  ```bash
+  $ curl https://brokencrystals.com/api/auth/login \
+  >   -H 'Content-Type: application/json' \
+  >   -d '{"user":"admin","password":"admin","op":"basic"}'
+  {"email":"admin","ldapProfileLink":"(&(objectClass=person)(objectClass=user)(email=admin))"}
+  ```
+
+  </details>
 
 - **Common Files** - Tries to find common files that shouldn’t be publicly exposed (such as “phpinfo”, “.htaccess”, “ssh-key.priv”, etc…). The application contains .htaccess and nginx.conf files under the client's root directory and additional files can be added by placing them under the public/public directory and running a build of the client.
 
@@ -533,7 +546,46 @@ Full configuration & usage examples can be found in our [demo project](https://g
 
   </details>
 
-- **JavaScript Vulnerabilities Scanning** - Index.html includes an older version of the jQuery library with known vulnerabilities.
+- **JavaScript Vulnerabilities Scanning** - Index.html includes an older version of several javascript libraries.
+  <details>
+    <summary>Example of exploit</summary>
+      ### List of URLs with Known Vulnerabilities
+
+      ```text
+      CVE-2020-11022 - https://brokencrystals.com/assets/vendor/jquery/jquery.min.js
+      CVE-2020-11023 - https://brokencrystals.com/assets/vendor/jquery/jquery.min.js
+      CVE-2024-6531 - https://brokencrystals.com/assets/vendor/bootstrap/js/bootstrap.bundle.js
+      CVE-2024-6531 - https://brokencrystals.com/assets/vendor/bootstrap/js/bootstrap.bundle.min.js
+      CVE-2024-6531 - https://brokencrystals.com/assets/vendor/bootstrap/js/bootstrap.js
+      CVE-2024-6531 - https://brokencrystals.com/assets/vendor/bootstrap/js/bootstrap.min.js
+      CVE-2025-26791 - https://brokencrystals.com/swagger/swagger-ui-bundle.js
+      ```
+
+      ### Finding Known Vulnerabilities with Retire.js
+
+      Retire.js is a tool that helps identify known vulnerabilities in JavaScript libraries. Below is an example of using Retire.js to scan a downloaded JavaScript file for vulnerabilities:
+
+      ```bash
+      # Download the JavaScript file
+      /app # curl https://brokencrystals.com/assets/vendor/bootstrap/js/bootstrap.min.js -o bootstrap.min.js
+
+      # Scan the file with Retire.js
+      /app # retire --js bootstrap.min.js
+      ```
+
+      #### Output:
+      ```
+      ↳ bootstrap 4.1.0 has known vulnerabilities:
+        - severity: medium; summary: XSS in collapse data-parent attribute; CVE: CVE-2018-14040; https://github.com/twbs/bootstrap/issues/20184
+        - severity: medium; summary: XSS in data-container property of tooltip; CVE: CVE-2018-14042; https://github.com/twbs/bootstrap/issues/20184
+        - severity: medium; summary: XSS in data-target property of scrollspy; CVE: CVE-2018-14041; https://github.com/advisories/GHSA-pj7m-g53m-7638
+        - severity: medium; summary: XSS in data-template, data-content, and data-title properties of tooltip/popover; CVE: CVE-2019-8331; https://github.com/advisories/GHSA-9v3m-8fp8-mj99
+        - severity: medium; summary: Bootstrap Cross-Site Scripting (XSS) vulnerability; CVE: CVE-2024-6531; https://github.com/advisories/GHSA-vc8w-jr9v-vj7f
+      ```
+
+      This output highlights the vulnerabilities found in the specified JavaScript file, along with their severity, descriptions, and references for further details.
+
+  </details>
 
 - **AO1 Vertical access controls** - The page /dashboard can be reached despite the rights of user.
     <details>
