@@ -82,6 +82,40 @@ Full configuration & usage examples can be found in our [demo project](https://g
   </details>
 
 - **Common Files** - Tries to find common files that shouldn’t be publicly exposed (such as “phpinfo”, “.htaccess”, “ssh-key.priv”, etc…). The application contains .htaccess and nginx.conf files under the client's root directory and additional files can be added by placing them under the public/public directory and running a build of the client.
+  <details>
+    <summary>Example Exploitation of Common Files</summary>
+
+  To demonstrate accessing a common file, you can use the following `curl` command:
+
+  ```bash
+  curl https://brokencrystals.com/.htaccess
+  ```
+
+  Response:
+
+  ```text
+  RewriteEngine on
+  RewriteCond %{REQUEST_FILENAME} !-d
+  RewriteCond %{REQUEST_FILENAME}\.php -f
+  RewriteRule ^(.*)$ $1.php
+
+  ErrorDocument 400 /error_pages/400.php
+  ErrorDocument 401 /error_pages/401.php
+  ErrorDocument 403 /error_pages/403.php
+  ErrorDocument 404 /error_pages/404.php
+  ErrorDocument 410 /error_pages/410.php
+  ErrorDocument 500 /error_pages/500.php
+
+  #Serve .htc files correctly, for IE fixes
+  AddType text/x-component .htc
+
+  php_value upload_max_filesize 10M
+  php_value post_max_size 10M
+  php_value max_execution_time 200
+  php_value max_input_time 200
+  ```
+
+  </details>
 
 - **Cookie Security** - Checks if the cookie has the “secure” and HTTP only flags. The application returns two cookies (session and bc-calls-counter cookie), both without secure and HttpOnly flags.
 
