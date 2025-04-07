@@ -322,6 +322,24 @@ Full configuration & usage examples can be found in our [demo project](https://g
 - **Mass Assignment** - You can add to user admin privileges upon creating user or updating userdata. When you are creating a new user /api/users/basic you can use additional hidden field in body request { ... "isAdmin" : true }. If you are trying to edit userdata with PUT request /api/users/one/{email}/info you can add this additional field mentioned above. For checking admin permissions there is one more endpoint: /api/users/one/{email}/adminpermission.
 
 - **Open Database** - The index.html file includes a link to manifest URL, which returns the server's configuration, including a DB connection string.
+    <details>
+      <summary>Example exposed database donnection string</summary>
+
+      ```bash
+      curl http://brokencrystals.com/api/config
+      ```
+
+      The server responds with configuration details:
+
+      ```json
+      {
+        "awsBucket": "https://neuralegion-open-bucket.s3.amazonaws.com",
+        "sql": "postgres://bc:bc@postgres:5432/bc",
+        "googlemaps": "AIzaSyD2wIxpYCuNI0Zjt8kChs2hLTS5abVQfRQ"
+      }
+      ```
+
+    </details>
 
 - **OS Command Injection** - The /api/spawn endpoint spawns a new process using the command in the _command_ query parameter. The endpoint is not referenced from UI.
     <details>
@@ -340,6 +358,7 @@ Full configuration & usage examples can be found in our [demo project](https://g
       ```
 
     </details>
+
     <details>
       <summary>Another Example Exploitation on graphQL</summary>
 
@@ -356,7 +375,6 @@ Full configuration & usage examples can be found in our [demo project](https://g
       ```
 
     </details>
-    ```
 
 - **Secret Tokens** - The index.html file includes a link to manifest URL, which returns the server's configuration, including a Google API key.
 
