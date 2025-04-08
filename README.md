@@ -214,6 +214,47 @@ Full configuration & usage examples can be found in our [demo project](https://g
 
 - **Directory Listing** - The Nginx config file under the nginx-conf directory is configured to allow directory listing.
 
+  <details>
+    <summary>Example Exploitation of Directory Listing</summary>
+
+  To demonstrate directory traversal, you can use the following `curl` command:
+
+  ```bash
+  curl https://brokencrystals.com/vendor/
+  ```
+
+  Example Response:
+
+  ```html
+  <head>
+    <title>Index of /vendor/</title>
+  </head>
+  <html>
+    <body>
+      <h1>Index of /vendor/</h1>
+      <hr />
+      <table style="width: max(450px, 50%);">
+        <tr>
+          <td>
+            <a href="/">../</a>
+          </td>
+          <td></td>
+          <td></td>
+        </tr>
+        <tr>
+          <td>
+            <a href="/vendor/bootstrap-4.1">bootstrap-4.1</a>
+          </td>
+          <td>4/7/2025, 8:33:43 AM</td>
+        </tr>
+        ...
+      </table>
+    </body>
+  </html>
+  ```
+
+    </details>
+
 - **File Upload** - The application allows uploading an avatar photo of the authenticated user. The server doesn't perform any sort of validation on the uploaded file.
   <details>
     <summary>Example of No Anti-Virus Protection</summary>
