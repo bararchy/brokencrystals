@@ -296,10 +296,31 @@ Full configuration & usage examples can be found in our [demo project](https://g
   </details>
 
 - **Full Path Disclosure** - All errors returned by the server include the full path of the file where the error has occurred. The errors can be triggered by passing wrong values as parameters or by modifying the bc-calls-counter cookie to a non-numeric value.
+  <details>
+    <summary>Example of Full Path Disclosure</summary>
+    ```bash
+    curl -H 'Cookie:bc-calls-counter=notint;' 'https://wset--26331-12.k3s.brokencrystals.nexploit.app/api/products/latest'
+    ```
+    Response:
+    ```json
+    {
+      "error": "Invalid counter value",
+      "location": "/usr/src/app/dist/components/global-exception.filter.js"
+    }
+    ```
+    The location field in the JSON response reveals the full internal file path: /usr/src/app/dist/components/global-exception.filter.js.
+    This is sensitive information that should not be exposed to users, as it provides insights into the server's directory structure.
+  </details>
 
 - **Headers Security Check** - The application is configured with misconfigured security headers. The list of headers is available in the headers.configurator.interceptor.ts file. A user can pass the _no-sec-headers_ query param to any API to prevent the server from sending the headers.
 
 - **HTML Injection** - Both forms testimonial and mailing list subscription forms allow HTML injection.
+  <details>
+    <summary>Example of HTML Injection</summary>
+
+  ![Example of HTML Injection](docs/htmli.gif)
+
+  </details>
 
 - **CSS Injection** - The login page is vulnerable to CSS Injections through a URL parameter: https://brokencrystals.com/userlogin?logobgcolor=transparent.
 
@@ -417,7 +438,50 @@ Full configuration & usage examples can be found in our [demo project](https://g
 
     </details>
 
-- **Secret Tokens** - The index.html file includes a link to manifest URL, which returns the server's configuration, including a Google API key.
+- **Secret Tokens** - The /api/secrets and /api/config contains many secret tokens returns the server's configuration, including a various of API keys.
+    <details>
+      <summary>Example Exploitation of Secret Tokens</summary>
+
+      To demonstrate the exposure of secret tokens, you can use the following `curl` commands:
+
+        ```bash
+        curl https://brokencrystals.com/api/secrets
+        ```
+
+        Response:
+
+        ```json
+        {
+          "codeclimate": "CODECLIMATE_REPO_TOKEN=62864c476ade6ab9d10d0ce0901ae2c211924852a28c5f960ae5165c1fdfec73",
+          "facebook": "EAACEdEose0cBAHyDF5HI5o2auPWv3lPP3zNYuWWpjMrSaIhtSvX73lsLOcas5k8GhC5HgOXnbF3rXRTczOpsbNb54CQL8LcQEMhZAWAJzI0AzmL23hZByFAia5avB6Q4Xv4u2QVoAdH0mcJhYTFRpyJKIAyDKUEBzz0GgZDZD",
+          "google_b64": "QUl6YhT6QXlEQnbTr2dSdEI1W7yL2mFCX3c4PPP5NlpkWE65NkZV",
+          "google_oauth": "188968487735-c7hh7k87juef6vv84697sinju2bet7gn.apps.googleusercontent.com",
+          "google_oauth_token": "ya29.a0TgU6SMDItdQQ9J7j3FVgJuByTTevl0FThTEkBs4pA4-9tFREyf2cfcL-_JU6Trg1O0NWwQKie4uGTrs35kmKlxohWgcAl8cg9DTxRx-UXFS-S1VYPLVtQLGYyNTfGp054Ad3ej73-FIHz3RZY43lcKSorbZEY4BI",
+          "heroku": "herokudev.staging.endosome.975138 pid=48751 request_id=0e9a8698-a4d2-4925-a1a5-113234af5f60",
+          "hockey_app": "HockeySDK: 203d3af93f4a218bfb528de08ae5d30ff65e1cf",
+          "outlook": "https://outlook.office.com/webhook/7dd49fc6-1975-443d-806c-08ebe8f81146@a532313f-11ec-43a2-9a7a-d2e27f4f3478/IncomingWebhook/8436f62b50ab41b3b93ba1c0a50a0b88/eff4cd58-1bb8-4899-94de-795f656b4a18",
+          "paypal": "access_token$production$x0lb4r69dvmmnufd$3ea7cb281754b7da7dac131ef5783321",
+          "slack": "xoxo-175588824543-175748345725-176608801663-826315f84e553d482bb7e73e8322sdf3"
+        }
+        ```
+
+        ```bash
+        curl https://brokencrystals.com/api/config
+        ```
+
+        Response:
+
+        ```json
+        {
+          "awsBucket": "https://neuralegion-open-bucket.s3.amazonaws.com",
+          "sql": "postgres://bc:bc@postgres:5432/bc",
+          "googlemaps": "AIzaSyD2wIxpYCuNI0Zjt8kChs2hLTS5abVQfRQ"
+        }
+        ```
+
+        These responses reveal sensitive information, such as API keys, database connection strings, and other tokens, which should not be publicly accessible.
+
+    </details>
 
 - **Server-Side Template Injection (SSTI)** - The endpoint /api/render receives a plain text body and renders it using the doT (http://github.com/olado/dot) templating engine.
   <details>
@@ -699,7 +763,13 @@ Full configuration & usage examples can be found in our [demo project](https://g
 
 - **Broken Function Level Authorization** - The endpoint DELETE `/users/one/:id/photo?isAdmin=` can be used to delete any user's profile photo by enumerating the user IDs and setting the `isAdmin` query parameter to true, as there is no validation of it's value on the server side.
 
-- **IFrame Injection** - The `/testimonials` page a URL parameter `videosrc` which directly controls the src attribute of the IFrame at the bottom of this page. Similarly, the home page takes a URL param `maptitle` which directly controls the `title` attribute of the IFrame at the CONTACT section of this page.
+- **IFrame Injection** - The `/marketplace` page a URL parameter `videosrc` which directly controls the src attribute of the IFrame at the bottom of this page. Similarly, the home page takes a URL param `maptitle` which directly controls the `title` attribute of the IFrame at the CONTACT section of this page.
+  <details>
+    <summary>IFrame Injection Example Exploitation</summary>
+
+  ![IFrame Injection Demonstration](docs/iframe.gif)
+
+  </details>
 
 - **Excessive Data Exposure** - visiting the page `https://brokencrystals.com/adminpage` reveals a list of registered users, including their First Name, Last Name, Email, and Company. Observing the background traffic, a `GET /api/users/search/` request is made, and the response contains sensitive data such as `cardNumber` and `phoneNumber`.
 
