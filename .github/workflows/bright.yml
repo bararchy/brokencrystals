@@ -1,0 +1,73 @@
+name: "Security Tests"
+
+on:
+  pull_request:
+    branches:
+      - '**'
+
+permissions:
+  checks: write
+  contents: read
+  id-token: write
+
+jobs:
+  security-tests:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22.x'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Install SecTester dependencies
+        run: npm i --save-dev @sectester/core @sectester/repeater @sectester/scan @sectester/runner
+
+      - name: Start application
+        env:
+          KC_BOOTSTRAP_ADMIN_PASSWORD: Pa55w0rd
+          KC_BOOTSTRAP_ADMIN_USERNAME: admin
+          KC_DB: postgres
+          KC_DB_PASSWORD: password
+          KC_DB_URL: jdbc:postgresql://keycloak-db:5432/keycloak
+          KC_DB_USERNAME: keycloak
+          KC_HEALTH_ENABLED: true
+          KC_HOSTNAME_STRICT: false
+          KC_HOSTNAME_STRICT_HTTPS: false
+          POSTGRES_DB: bc
+          POSTGRES_PASSWORD: bc
+          POSTGRES_USER: bc
+          URL: http://localhost:3000
+        run: docker compose --file=compose.local.yml up -d --wait
+
+      - name: Verify application readiness
+        run: |
+          for i in {1..10}; do
+            if nc -zv 127.0.0.1 3000; then
+              echo "Application is ready"
+              break
+            fi
+            echo "Waiting for application to be ready..."
+            sleep 5
+          done
+
+      - name: Configure Bright credentials
+        uses: ./.github/workflows/composite/configure-bright-credentials
+        with:
+          BRIGHT_HOSTNAME: development.playground.brightsec.com
+          BRIGHT_PROJECT_ID: dzZUZGaqqVhvHnZnjfXUoP
+          BRIGHT_TOKEN: ${{ secrets.BRIGHT_TOKEN }}
+
+      - name: Run security tests
+        env:
+          BRIGHT_HOSTNAME: development.playground.brightsec.com
+          BRIGHT_PROJECT_ID: dzZUZGaqqVhvHnZnjfXUoP
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          BRIGHT_TOKEN: ${{ env.BRIGHT_TOKEN }}
+          BRIGHT_TARGET_URL: http://localhost:3000
+        run: node --experimental-transform-types --experimental-strip-types --experimental-detect-module --disable-warning=MODULE_TYPELESS_PACKAGE_JSON --disable-warning=ExperimentalWarning --test-force-exit --test .brightsec/tests/*.test.ts --test-concurrency=4
