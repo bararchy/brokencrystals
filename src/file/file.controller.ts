@@ -86,7 +86,19 @@ export class FileController {
     @Query('type') contentType: string,
     @Res({ passthrough: true }) res: FastifyReply
   ) {
-    const file: Stream = await this.fileService.getFile(path);
+    // Validate that the path is a relative path
+    if (path.includes('..') || path.includes('://')) {
+      throw new BadRequestException('Invalid path parameter');
+    }
+
+    // Ensure the path is within a specific directory
+    const basePath = path.resolve('allowed/directory');
+    const resolvedPath = path.resolve(basePath, path);
+    if (!resolvedPath.startsWith(basePath)) {
+      throw new BadRequestException('Path is outside of allowed directory');
+    }
+
+    const file: Stream = await this.fileService.getFile(resolvedPath);
     const type = this.getContentType(contentType);
     res.type(type);
 
@@ -159,6 +171,11 @@ export class FileController {
     @Query('type') contentType: string,
     @Res({ passthrough: true }) res: FastifyReply
   ) {
+    // Validate that the path is a relative path
+    if (path.includes('..') || path.includes('://')) {
+      throw new BadRequestException('Invalid path parameter');
+    }
+
     const file: Stream = await this.loadCPFile(
       CloudProvidersMetaData.AWS,
       path
@@ -197,6 +214,11 @@ export class FileController {
     @Query('type') contentType: string,
     @Res({ passthrough: true }) res: FastifyReply
   ) {
+    // Validate that the path is a relative path
+    if (path.includes('..') || path.includes('://')) {
+      throw new BadRequestException('Invalid path parameter');
+    }
+
     const file: Stream = await this.loadCPFile(
       CloudProvidersMetaData.AZURE,
       path
