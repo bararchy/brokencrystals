@@ -130,7 +130,7 @@ export class PartnersController {
 
     try {
       // Sanitize the keyword to prevent XPath injection
-      const sanitizedKeyword = keyword.replace(/'/g, "\'");
+      const sanitizedKeyword = keyword.replace(/'/g, "\'").replace(/"/g, '\"');
       const xpath = `//partners/partner/name[contains(., '${sanitizedKeyword}')]`;
       return this.partnersService.getPartnersProperties(xpath);
     } catch (err) {
