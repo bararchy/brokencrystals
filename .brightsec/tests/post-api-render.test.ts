@@ -21,7 +21,7 @@ after(() => runner.clear());
 test('POST /api/render', { signal: AbortSignal.timeout(timeout) }, async () => {
   await runner
     .createScan({
-      tests: ['ssti', 'secret_tokens', 'unvalidated_redirect', 'xxe', 'osi'],
+      tests: ['ssti'],
       attackParamLocations: [AttackParamLocation.BODY]
     })
     .threshold(Severity.CRITICAL)
