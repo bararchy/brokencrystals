@@ -86,11 +86,22 @@ export class FileController {
     @Query('type') contentType: string,
     @Res({ passthrough: true }) res: FastifyReply
   ) {
+    // Validate the path to prevent SSRF
+    if (!this.isValidPath(path)) {
+      throw new BadRequestException('Invalid file path');
+    }
+
     const file: Stream = await this.fileService.getFile(path);
     const type = this.getContentType(contentType);
     res.type(type);
 
     return file;
+  }
+
+  private isValidPath(filePath: string): boolean {
+    // Implement a whitelist of allowed paths or patterns
+    const allowedPaths = ['config/products/crystals/'];
+    return allowedPaths.some(allowedPath => filePath.startsWith(allowedPath));
   }
 
   @Get('/google')
@@ -197,6 +208,11 @@ export class FileController {
     @Query('type') contentType: string,
     @Res({ passthrough: true }) res: FastifyReply
   ) {
+    // Validate the path to prevent SSRF
+    if (!this.isValidPath(path)) {
+      throw new BadRequestException('Invalid file path');
+    }
+
     const file: Stream = await this.loadCPFile(
       CloudProvidersMetaData.AZURE,
       path
