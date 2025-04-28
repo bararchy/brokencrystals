@@ -1,5 +1,4 @@
 name: "Build and Push Docker Image (Manual)"
-
 on:
   workflow_dispatch:
     inputs:
@@ -7,6 +6,9 @@ on:
         description: 'Tag prefix to use (defaults to unstable)'
         required: false
         default: 'unstable'
+  push:
+    branches:
+      - stable
 
 jobs:
   docker-build-push:
@@ -26,12 +28,16 @@ jobs:
       - name: Generate short SHA
         id: sha
         run: echo "SHORT_SHA=$(echo ${{ github.sha }} | cut -c1-6)" >> $GITHUB_ENV
-
+      
       - name: Set tag prefix
         id: set_tag_prefix
         run: |
-          # Use user provided tag prefix (defaults to 'unstable')
-          TAG_PREFIX="${{ github.event.inputs.tag_prefix }}"
+          # Use user-provided tag prefix or default to 'unstable'
+          if [ -z "${{ github.event.inputs.tag_prefix }}" ]; then
+            TAG_PREFIX="unstable"
+          else
+            TAG_PREFIX="${{ github.event.inputs.tag_prefix }}"
+          fi
           echo "TAG_PREFIX=${TAG_PREFIX}" >> $GITHUB_ENV
 
       - name: Build Docker image
