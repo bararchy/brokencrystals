@@ -97,7 +97,7 @@ export class AppController {
     const allowedUrls = ['https://example.com', 'https://another-allowed-site.com'];
     try {
       const parsedUrl = new URL(url);
-      if (!allowedUrls.includes(parsedUrl.origin)) {
+      if (!allowedUrls.some(allowedUrl => parsedUrl.origin === new URL(allowedUrl).origin)) {
         throw new HttpException('URL not allowed', HttpStatus.BAD_REQUEST);
       }
       return { url: parsedUrl.toString() };
@@ -130,7 +130,7 @@ export class AppController {
   @Header('content-type', 'text/xml')
   async xml(@Body() xml: string): Promise<string> {
     const xmlDoc = parseXml(decodeURIComponent(xml), {
-      noent: false, // Disable external entity expansion
+      noent: true, // Disable external entity expansion
       dtdvalid: false, // Disable DTD validation
       recover: true
     });
