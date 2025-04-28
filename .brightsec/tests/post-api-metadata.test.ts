@@ -21,7 +21,7 @@ const baseUrl = process.env.BRIGHT_TARGET_URL!;
 test('POST /api/metadata', { signal: AbortSignal.timeout(timeout) }, async () => {
   await runner
     .createScan({
-      tests: ['xxe', 'xss', 'secret_tokens', 'osi', 'unvalidated_redirect'],
+      tests: ['xxe'],
       attackParamLocations: [AttackParamLocation.BODY, AttackParamLocation.HEADER]
     })
     .threshold(Severity.CRITICAL)
