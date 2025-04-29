@@ -85,8 +85,13 @@ export class ProductsController {
       throw new BadRequestException('Invalid date format');
     }
 
-    const allProducts = await this.productsService.findAll(df, dt);
-    return allProducts.map((p: Product) => new ProductDto(p));
+    try {
+      const allProducts = await this.productsService.findAll(df, dt);
+      return allProducts.map((p: Product) => new ProductDto(p));
+    } catch (error) {
+      this.logger.error('Failed to retrieve products', error.stack);
+      throw new InternalServerErrorException('Failed to retrieve products. Please try again later.');
+    }
   }
 
   @Get('latest')

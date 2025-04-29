@@ -169,6 +169,10 @@ export class FileController {
     @Query('type') contentType: string,
     @Res({ passthrough: true }) res: FastifyReply
   ) {
+    if (!this.isValidAwsPath(path)) {
+      throw new BadRequestException('Invalid file path for AWS');
+    }
+
     const file: Stream = await this.loadCPFile(
       CloudProvidersMetaData.AWS,
       path
@@ -177,6 +181,12 @@ export class FileController {
     res.type(type);
 
     return file;
+  }
+
+  private isValidAwsPath(filePath: string): boolean {
+    // Implement a whitelist of allowed paths or a regex pattern to validate paths for AWS
+    const allowedPaths = ['config/products/crystals/'];
+    return allowedPaths.some(allowedPath => filePath.startsWith(allowedPath));
   }
 
   @Get('/azure')

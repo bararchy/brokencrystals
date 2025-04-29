@@ -111,7 +111,7 @@ export class UsersController {
       this.logger.debug(`Find a user by email: ${email}`);
       return new UserDto(await this.usersService.findByEmail(email));
     } catch (err) {
-      throw new HttpException(err.message, err.status);
+      throw new HttpException('An error occurred while retrieving user information', HttpStatus.INTERNAL_SERVER_ERROR);
     }
   }
 
@@ -140,7 +140,7 @@ export class UsersController {
       this.logger.debug(`Find a user by id: ${id}`);
       return new UserDto(await this.usersService.findById(id));
     } catch (err) {
-      throw new HttpException(err.message, err.status);
+      throw new HttpException('An error occurred while retrieving user information', HttpStatus.INTERNAL_SERVER_ERROR);
     }
   }
 
@@ -169,7 +169,7 @@ export class UsersController {
       this.logger.debug(`Find a full user info by email: ${email}`);
       return new UserDto(await this.usersService.findByEmail(email));
     } catch (err) {
-      throw new HttpException(err.message, err.status);
+      throw new HttpException('An error occurred while retrieving user information', HttpStatus.INTERNAL_SERVER_ERROR);
     }
   }
 
@@ -189,7 +189,7 @@ export class UsersController {
       const users = await this.usersService.searchByName(name, 50);
       return users.map((user) => new UserDto(user));
     } catch (err) {
-      throw new HttpException(err.message, err.status);
+      throw new HttpException('An error occurred while searching for users', HttpStatus.INTERNAL_SERVER_ERROR);
     }
   }
 
@@ -451,8 +451,7 @@ export class UsersController {
       type: 'object',
       properties: {
         statusCode: { type: 'number' },
-        message: { type: 'string' },
-        error: { type: 'string' }
+        message: { type: 'string' }
       }
     }
   })
