@@ -111,7 +111,7 @@ export class UsersController {
       this.logger.debug(`Find a user by email: ${email}`);
       return new UserDto(await this.usersService.findByEmail(email));
     } catch (err) {
-      throw new HttpException(err.message, err.status);
+      throw new HttpException('An error occurred while retrieving user information.', HttpStatus.INTERNAL_SERVER_ERROR);
     }
   }
 
@@ -140,7 +140,7 @@ export class UsersController {
       this.logger.debug(`Find a user by id: ${id}`);
       return new UserDto(await this.usersService.findById(id));
     } catch (err) {
-      throw new HttpException(err.message, err.status);
+      throw new HttpException('An error occurred while retrieving user information.', HttpStatus.INTERNAL_SERVER_ERROR);
     }
   }
 
@@ -169,7 +169,7 @@ export class UsersController {
       this.logger.debug(`Find a full user info by email: ${email}`);
       return new UserDto(await this.usersService.findByEmail(email));
     } catch (err) {
-      throw new HttpException(err.message, err.status);
+      throw new HttpException('An error occurred while retrieving user information.', HttpStatus.INTERNAL_SERVER_ERROR);
     }
   }
 
@@ -189,7 +189,7 @@ export class UsersController {
       const users = await this.usersService.searchByName(name, 50);
       return users.map((user) => new UserDto(user));
     } catch (err) {
-      throw new HttpException(err.message, err.status);
+      throw new HttpException('An error occurred while searching for users.', HttpStatus.INTERNAL_SERVER_ERROR);
     }
   }
 
@@ -216,10 +216,7 @@ export class UsersController {
     this.logger.debug(`Find a user photo by email: ${email}`);
     const user = await this.usersService.findByEmail(email);
     if (!user) {
-      throw new NotFoundException({
-        error: 'Could not file user',
-        location: __filename
-      });
+      throw new NotFoundException('User not found');
     }
 
     if (!user.photo) {
@@ -230,10 +227,7 @@ export class UsersController {
     try {
       return user.photo;
     } catch (err) {
-      throw new InternalServerErrorException({
-        error: err.message,
-        location: __filename
-      });
+      throw new InternalServerErrorException('An error occurred while retrieving the photo.');
     }
   }
 
@@ -269,10 +263,7 @@ export class UsersController {
 
     const user = await this.usersService.findById(id);
     if (!user) {
-      throw new NotFoundException({
-        error: 'Could not file user',
-        location: __filename
-      });
+      throw new NotFoundException('User not found');
     }
 
     await this.usersService.deletePhoto(id);
@@ -309,10 +300,7 @@ export class UsersController {
         }
       }
     } catch (err) {
-      throw new InternalServerErrorException({
-        error: err.message,
-        location: __filename
-      });
+      throw new InternalServerErrorException('An error occurred while processing the LDAP query.');
     }
 
     if (!users) {
@@ -355,8 +343,8 @@ export class UsersController {
       );
     } catch (err) {
       throw new HttpException(
-        err.message ?? 'Something went wrong',
-        err.status ?? HttpStatus.INTERNAL_SERVER_ERROR
+        'An error occurred while creating the user.',
+        HttpStatus.INTERNAL_SERVER_ERROR
       );
     }
   }
@@ -401,8 +389,8 @@ export class UsersController {
       return keycloakUser;
     } catch (err) {
       throw new HttpException(
-        err.response?.data ?? err.message ?? 'Something went wrong',
-        err.response?.status ?? 500
+        'An error occurred while creating the OIDC user.',
+        HttpStatus.INTERNAL_SERVER_ERROR
       );
     }
   }
@@ -444,8 +432,8 @@ export class UsersController {
       return new UserDto(await this.usersService.updateUserInfo(user, newData));
     } catch (err) {
       throw new HttpException(
-        err.message || 'Internal server error',
-        err.status || 500
+        'An error occurred while updating user information.',
+        HttpStatus.INTERNAL_SERVER_ERROR
       );
     }
   }
@@ -463,8 +451,7 @@ export class UsersController {
       type: 'object',
       properties: {
         statusCode: { type: 'number' },
-        message: { type: 'string' },
-        error: { type: 'string' }
+        message: { type: 'string' }
       }
     }
   })
@@ -488,8 +475,8 @@ export class UsersController {
       return new UserDto(user);
     } catch (err) {
       throw new HttpException(
-        err.message || 'Internal server error',
-        err.status || 500
+        'An error occurred while retrieving user information.',
+        HttpStatus.INTERNAL_SERVER_ERROR
       );
     }
   }
@@ -551,10 +538,7 @@ export class UsersController {
         await this.usersService.updatePhoto(email, file_buffer);
       }
     } catch (err) {
-      throw new InternalServerErrorException({
-        error: err.message,
-        location: __filename
-      });
+      throw new InternalServerErrorException('An error occurred while uploading the photo.');
     }
   }
 
@@ -578,8 +562,8 @@ export class UsersController {
         return false;
       }
       throw new HttpException(
-        err.message ?? 'Something went wrong',
-        err.status ?? HttpStatus.INTERNAL_SERVER_ERROR
+        'An error occurred while checking user existence.',
+        HttpStatus.INTERNAL_SERVER_ERROR
       );
     }
   }
