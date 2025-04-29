@@ -89,7 +89,7 @@ export class ProductsController {
       const allProducts = await this.productsService.findAll(df, dt);
       return allProducts.map((p: Product) => new ProductDto(p));
     } catch (error) {
-      this.logger.error('Failed to retrieve products', error.stack);
+      this.logger.error('Failed to retrieve products', error.message);
       throw new InternalServerErrorException('Failed to retrieve products. Please try again later.');
     }
   }
@@ -141,7 +141,7 @@ export class ProductsController {
       const query = `UPDATE product SET views_count = views_count + 1 WHERE name = '${productName}'`;
       return await this.productsService.updateProduct(query);
     } catch (err) {
-      this.logger.error('Error updating product views', err.stack);
+      this.logger.error('Error updating product views', err.message);
       throw new InternalServerErrorException('An error occurred while updating product views.');
     }
   }

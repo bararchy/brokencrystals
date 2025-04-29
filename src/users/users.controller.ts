@@ -227,6 +227,7 @@ export class UsersController {
     try {
       return user.photo;
     } catch (err) {
+      this.logger.error('An error occurred while retrieving the photo', err.stack);
       throw new InternalServerErrorException('An error occurred while retrieving the photo');
     }
   }
