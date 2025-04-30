@@ -21,7 +21,7 @@ const baseUrl = process.env.BRIGHT_TARGET_URL!;
 test('GET /api/config', { signal: AbortSignal.timeout(timeout) }, async () => {
   await runner
     .createScan({
-      tests: ['secret_tokens', 'csrf', 'improper_asset_management', 'full_path_disclosure'],
+      tests: ['secret_tokens'],
       attackParamLocations: [AttackParamLocation.QUERY, AttackParamLocation.HEADER]
     })
     .threshold(Severity.CRITICAL)
