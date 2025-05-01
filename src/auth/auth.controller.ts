@@ -129,10 +129,15 @@ export class AuthController {
 
     let loginData: LoginData;
 
-    if (req.op === FormMode.OIDC) {
-      loginData = await this.loginOidc(req);
-    } else {
-      loginData = await this.loginBasic(req);
+    try {
+      if (req.op === FormMode.OIDC) {
+        loginData = await this.loginOidc(req);
+      } else {
+        loginData = await this.loginBasic(req);
+      }
+    } catch (err) {
+      this.logger.error('Error during login process', err);
+      throw new InternalServerErrorException('An unexpected error occurred');
     }
 
     const { token, ...loginResponse } = loginData;
@@ -684,10 +689,7 @@ export class AuthController {
         });
       }
 
-      throw new InternalServerErrorException({
-        error: 'An unexpected error occurred',
-        location: 'AuthController'
-      });
+      throw new InternalServerErrorException('An unexpected error occurred');
     }
   }
 
@@ -697,10 +699,7 @@ export class AuthController {
     try {
       user = await this.usersService.findByEmail(req.user);
     } catch (err) {
-      throw new InternalServerErrorException({
-        error: 'An unexpected error occurred',
-        location: 'AuthController'
-      });
+      throw new InternalServerErrorException('An unexpected error occurred');
     }
 
     if (!user || !(await passwordMatches(req.password, user.password))) {

@@ -111,6 +111,7 @@ export class UsersController {
       this.logger.debug(`Find a user by email: ${email}`);
       return new UserDto(await this.usersService.findByEmail(email));
     } catch (err) {
+      this.logger.error('Error retrieving user by email', err.stack);
       throw new HttpException('An error occurred while retrieving user information.', HttpStatus.INTERNAL_SERVER_ERROR);
     }
   }
@@ -140,6 +141,7 @@ export class UsersController {
       this.logger.debug(`Find a user by id: ${id}`);
       return new UserDto(await this.usersService.findById(id));
     } catch (err) {
+      this.logger.error('Error retrieving user by id', err.stack);
       throw new HttpException('An error occurred while retrieving user information.', HttpStatus.INTERNAL_SERVER_ERROR);
     }
   }
@@ -169,6 +171,7 @@ export class UsersController {
       this.logger.debug(`Find a full user info by email: ${email}`);
       return new UserDto(await this.usersService.findByEmail(email));
     } catch (err) {
+      this.logger.error('Error retrieving full user info by email', err.stack);
       throw new HttpException('An error occurred while retrieving user information.', HttpStatus.INTERNAL_SERVER_ERROR);
     }
   }
@@ -189,6 +192,7 @@ export class UsersController {
       const users = await this.usersService.searchByName(name, 50);
       return users.map((user) => new UserDto(user));
     } catch (err) {
+      this.logger.error('Error searching users by name', err.stack);
       throw new HttpException('An error occurred while searching for users.', HttpStatus.INTERNAL_SERVER_ERROR);
     }
   }
@@ -301,6 +305,7 @@ export class UsersController {
         }
       }
     } catch (err) {
+      this.logger.error('Error processing LDAP query', err.stack);
       throw new InternalServerErrorException('An error occurred while processing the LDAP query.');
     }
 
@@ -343,6 +348,7 @@ export class UsersController {
         await this.usersService.createUser(user, user.op === SignupMode.BASIC)
       );
     } catch (err) {
+      this.logger.error('Error creating user', err.stack);
       throw new HttpException(
         'An error occurred while creating the user.',
         err.status ?? HttpStatus.INTERNAL_SERVER_ERROR
@@ -389,6 +395,7 @@ export class UsersController {
 
       return keycloakUser;
     } catch (err) {
+      this.logger.error('Error creating OIDC user', err.stack);
       throw new HttpException(
         'An error occurred while creating the OIDC user.',
         err.response?.status ?? 500
@@ -432,6 +439,7 @@ export class UsersController {
       }
       return new UserDto(await this.usersService.updateUserInfo(user, newData));
     } catch (err) {
+      this.logger.error('Error updating user information', err.stack);
       throw new HttpException(
         'An error occurred while updating user information.',
         err.status || 500
@@ -475,6 +483,7 @@ export class UsersController {
       }
       return new UserDto(user);
     } catch (err) {
+      this.logger.error('Error retrieving user information', err.stack);
       throw new HttpException(
         'An error occurred while retrieving user information.',
         err.status || 500
@@ -539,6 +548,7 @@ export class UsersController {
         await this.usersService.updatePhoto(email, file_buffer);
       }
     } catch (err) {
+      this.logger.error('Error uploading photo', err.stack);
       throw new InternalServerErrorException('An error occurred while uploading the photo.');
     }
   }
@@ -562,6 +572,7 @@ export class UsersController {
       if (err.status === HttpStatus.NOT_FOUND) {
         return false;
       }
+      this.logger.error('Error checking user existence', err.stack);
       throw new HttpException(
         'An error occurred while checking user existence.',
         err.status ?? HttpStatus.INTERNAL_SERVER_ERROR
