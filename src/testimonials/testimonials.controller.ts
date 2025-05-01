@@ -40,7 +40,7 @@ export class TestimonialsController {
     type: TestimonialDto
   })
   @UseGuards(AuthGuard)
-  @JwtType(JwtProcessorType.RSA)
+  @JwtType(JwtProcessorType.RSA_SIGNATURE) // Enforce RSA Signature for JWT validation
   @ApiOperation({
     description: API_DESC_CREATE_TESTIMONIAL
   })
@@ -100,6 +100,11 @@ export class TestimonialsController {
   })
   async getCount(@Query('query') query: string): Promise<number> {
     this.logger.debug('Get count of testimonials.');
-    return await this.testimonialsService.count(query);
+    try {
+      return await this.testimonialsService.count(query);
+    } catch (error) {
+      this.logger.error('Error fetching testimonial count', error);
+      throw new Error('Unable to fetch testimonial count at this time.');
+    }
   }
 }
