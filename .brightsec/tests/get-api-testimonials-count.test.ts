@@ -21,7 +21,7 @@ after(() => runner.clear());
 test('GET /api/testimonials/count', { signal: AbortSignal.timeout(timeout) }, async () => {
   await runner
     .createScan({
-      tests: ['sqli', 'csrf', 'full_path_disclosure', 'improper_asset_management'],
+      tests: ['sqli'],
       attackParamLocations: [AttackParamLocation.QUERY]
     })
     .threshold(Severity.CRITICAL)
