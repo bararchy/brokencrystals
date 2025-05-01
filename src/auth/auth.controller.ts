@@ -699,6 +699,7 @@ export class AuthController {
     try {
       user = await this.usersService.findByEmail(req.user);
     } catch (err) {
+      this.logger.error('Error finding user by email', err);
       throw new InternalServerErrorException('An unexpected error occurred');
     }
 
