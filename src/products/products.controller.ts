@@ -85,8 +85,13 @@ export class ProductsController {
       throw new BadRequestException('Invalid date format');
     }
 
-    const allProducts = await this.productsService.findAll(df, dt);
-    return allProducts.map((p: Product) => new ProductDto(p));
+    try {
+      const allProducts = await this.productsService.findAll(df, dt);
+      return allProducts.map((p: Product) => new ProductDto(p));
+    } catch (error) {
+      this.logger.error('Failed to retrieve products', error.message);
+      throw new InternalServerErrorException('Failed to retrieve products. Please try again later.');
+    }
   }
 
   @Get('latest')
@@ -102,13 +107,15 @@ export class ProductsController {
     @Query('limit') limit: number
   ): Promise<ProductDto[]> {
     this.logger.debug('Get latest products.');
+    const MAX_LIMIT = 50; // Define a maximum limit for the number of products
     if (limit && isNaN(limit)) {
       throw new BadRequestException('Limit must be a number');
     }
     if (limit && limit < 0) {
       throw new BadRequestException('Limit must be positive');
     }
-    const products = await this.productsService.findLatest(limit || 3);
+    const effectiveLimit = Math.min(limit || 3, MAX_LIMIT); // Apply the maximum limit
+    const products = await this.productsService.findLatest(effectiveLimit);
     return products.map((p: Product) => new ProductDto(p));
   }
 
@@ -134,10 +141,8 @@ export class ProductsController {
       const query = `UPDATE product SET views_count = views_count + 1 WHERE name = '${productName}'`;
       return await this.productsService.updateProduct(query);
     } catch (err) {
-      throw new InternalServerErrorException({
-        error: err.message,
-        location: __filename
-      });
+      this.logger.error('Error updating product views', err.message);
+      throw new InternalServerErrorException('An error occurred while updating product views.');
     }
   }
 }
