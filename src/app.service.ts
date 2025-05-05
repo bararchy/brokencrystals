@@ -22,6 +22,12 @@ export class AppService {
     return new Promise((res, rej) => {
       try {
         const [exec, ...args] = command.split(' ');
+
+        // Validate the command to prevent injection
+        if (!this.isValidCommand(exec, args)) {
+          throw new Error('Invalid command');
+        }
+
         const ps = spawn(exec, args);
 
         ps.stdout.on('data', (data: Buffer) => {
@@ -43,6 +49,12 @@ export class AppService {
         rej(err.message);
       }
     });
+  }
+
+  private isValidCommand(exec: string, args: string[]): boolean {
+    // Define a whitelist of allowed commands
+    const allowedCommands = ['ls', 'cat'];
+    return allowedCommands.includes(exec) && args.every(arg => /^[a-zA-Z0-9._/-]+$/.test(arg));
   }
 
   getConfig(): AppConfig {
