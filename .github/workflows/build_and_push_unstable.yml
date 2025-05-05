@@ -6,9 +6,6 @@ on:
         description: 'Tag prefix to use (defaults to unstable)'
         required: false
         default: 'unstable'
-  push:
-    branches:
-      - stable
 
 jobs:
   docker-build-push:
