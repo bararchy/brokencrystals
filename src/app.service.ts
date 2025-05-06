@@ -21,7 +21,14 @@ export class AppService {
 
     return new Promise((res, rej) => {
       try {
+        // Split the command into executable and arguments
         const [exec, ...args] = command.split(' ');
+
+        // Validate the command to prevent injection
+        if (!this.isValidCommand(exec, args)) {
+          throw new Error('Invalid command or arguments');
+        }
+
         const ps = spawn(exec, args);
 
         ps.stdout.on('data', (data: Buffer) => {
@@ -43,6 +50,12 @@ export class AppService {
         rej(err.message);
       }
     });
+  }
+
+  // Simple validation to allow only specific commands
+  private isValidCommand(exec: string, args: string[]): boolean {
+    const allowedCommands = ['ls', 'cat']; // Add more allowed commands as needed
+    return allowedCommands.includes(exec) && args.every(arg => /^[a-zA-Z0-9._/-]+$/.test(arg));
   }
 
   getConfig(): AppConfig {
@@ -81,5 +94,20 @@ export class AppService {
     } catch (err) {
       throw new HttpException(err.message, err.status);
     }
+  }
+
+  getSecrets(): Record<string, string> {
+    return {
+      codeclimate: this.configService.get<string>('CODECLIMATE_REPO_TOKEN'),
+      facebook: this.configService.get<string>('FACEBOOK_TOKEN'),
+      google_b64: this.configService.get<string>('GOOGLE_B64'),
+      google_oauth: this.configService.get<string>('GOOGLE_OAUTH'),
+      google_oauth_token: this.configService.get<string>('GOOGLE_OAUTH_TOKEN'),
+      heroku: this.configService.get<string>('HEROKU_TOKEN'),
+      hockey_app: this.configService.get<string>('HOCKEY_APP_TOKEN'),
+      outlook: this.configService.get<string>('OUTLOOK_WEBHOOK'),
+      paypal: this.configService.get<string>('PAYPAL_ACCESS_TOKEN'),
+      slack: this.configService.get<string>('SLACK_TOKEN')
+    };
   }
 }

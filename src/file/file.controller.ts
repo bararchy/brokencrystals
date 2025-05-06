@@ -82,11 +82,18 @@ export class FileController {
     description: SWAGGER_DESC_READ_FILE
   })
   async loadFile(
-    @Query('path') path: string,
+    @Query('path') filePath: string,
     @Query('type') contentType: string,
     @Res({ passthrough: true }) res: FastifyReply
   ) {
-    const file: Stream = await this.fileService.getFile(path);
+    // Validate the path to ensure it doesn't access unauthorized resources
+    const allowedBasePath = '/allowed/base/path/';
+    const resolvedPath = path.resolve(allowedBasePath, filePath);
+    if (!resolvedPath.startsWith(allowedBasePath)) {
+      throw new BadRequestException('Access to the specified path is not allowed.');
+    }
+
+    const file: Stream = await this.fileService.getFile(resolvedPath);
     const type = this.getContentType(contentType);
     res.type(type);
 
@@ -117,14 +124,18 @@ export class FileController {
     description: SWAGGER_DESC_READ_FILE
   })
   async loadGoogleFile(
-    @Query('path') path: string,
+    @Query('path') filePath: string,
     @Query('type') contentType: string,
     @Res({ passthrough: true }) res: FastifyReply
   ) {
-    const file: Stream = await this.loadCPFile(
-      CloudProvidersMetaData.GOOGLE,
-      path
-    );
+    // Validate the path to ensure it doesn't access unauthorized resources
+    const allowedBasePath = CloudProvidersMetaData.GOOGLE;
+    const resolvedPath = path.resolve(allowedBasePath, filePath);
+    if (!resolvedPath.startsWith(allowedBasePath)) {
+      throw new BadRequestException('Access to the specified path is not allowed.');
+    }
+
+    const file: Stream = await this.fileService.getFile(resolvedPath);
     const type = this.getContentType(contentType);
     res.type(type);
 
@@ -197,6 +208,11 @@ export class FileController {
     @Query('type') contentType: string,
     @Res({ passthrough: true }) res: FastifyReply
   ) {
+    // Validate the path to ensure it doesn't access unauthorized resources
+    if (!path.startsWith('/allowed/azure/path/')) {
+      throw new BadRequestException('Access to the specified path is not allowed.');
+    }
+
     const file: Stream = await this.loadCPFile(
       CloudProvidersMetaData.AZURE,
       path
@@ -235,6 +251,11 @@ export class FileController {
     @Query('type') contentType: string,
     @Res({ passthrough: true }) res: FastifyReply
   ) {
+    // Validate the path to ensure it doesn't access unauthorized resources
+    if (!path.startsWith('/allowed/path/')) {
+      throw new BadRequestException('Access to the specified path is not allowed.');
+    }
+
     const file: Stream = await this.loadCPFile(
       CloudProvidersMetaData.DIGITAL_OCEAN,
       path
