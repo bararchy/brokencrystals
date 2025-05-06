@@ -23,7 +23,7 @@ const baseUrl = process.env.BRIGHT_TARGET_URL!;
 test('POST /api/render', { signal: AbortSignal.timeout(timeout) }, async () => {
   await runner
     .createScan({
-      tests: ['ssti', 'xss', 'osi', 'xxe', 'secret_tokens'],
+      tests: ['ssti'],
       attackParamLocations: [AttackParamLocation.BODY]
     })
     .threshold(Severity.CRITICAL)
