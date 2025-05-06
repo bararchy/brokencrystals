@@ -120,7 +120,7 @@ export class AppController {
   @Header('content-type', 'text/xml')
   async xml(@Body() xml: string): Promise<string> {
     const xmlDoc = parseXml(decodeURIComponent(xml), {
-      noent: true, // Disable external entity expansion
+      noent: false, // Disable external entity expansion
       dtdvalid: false, // Disable DTD validation
       recover: true
     });
@@ -177,6 +177,7 @@ export class AppController {
     const config = this.appService.getConfig();
     // Remove sensitive information before returning
     delete config.sql;
+    delete config.googlemaps;
     return config;
   }
 
