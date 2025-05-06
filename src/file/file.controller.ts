@@ -50,12 +50,54 @@ export class FileController {
 
   private async loadCPFile(cpBaseUrl: string, path: string) {
     if (!path.startsWith(cpBaseUrl)) {
-      throw new BadRequestException(`Invalid paramater 'path' ${path}`);
+      throw new BadRequestException(`Invalid parameter 'path' ${path}`);
     }
 
     const file: Stream = await this.fileService.getFile(path);
 
     return file;
+  }
+
+  private isValidAzurePath(path: string): boolean {
+    // Define a whitelist of allowed paths or patterns
+    const allowedPaths = [
+      '/metadata/instance/compute',
+      '/metadata/instance/network'
+    ];
+    return allowedPaths.some(allowedPath => path.startsWith(allowedPath));
+  }
+
+  private isValidAwsPath(path: string): boolean {
+    // Define a whitelist of allowed paths or patterns for AWS
+    const allowedPaths = [
+      'ami-id',
+      'instance-id',
+      'instance-type',
+      'local-hostname',
+      'local-ipv4'
+    ];
+    return allowedPaths.some(allowedPath => path.startsWith(allowedPath));
+  }
+
+  private isValidDigitalOceanPath(path: string): boolean {
+    // Define a whitelist of allowed paths or patterns for Digital Ocean
+    const allowedPaths = [
+      '/droplet_id',
+      '/hostname',
+      '/vendor_data',
+      '/public_keys',
+      '/region'
+    ];
+    return allowedPaths.some(allowedPath => path.startsWith(allowedPath));
+  }
+
+  private isValidLocalPath(path: string): boolean {
+    // Define a whitelist of allowed local paths or patterns
+    const allowedPaths = [
+      'config/products/crystals/',
+      'public/images/'
+    ];
+    return allowedPaths.some(allowedPath => path.startsWith(allowedPath));
   }
 
   @Get()
@@ -86,11 +128,24 @@ export class FileController {
     @Query('type') contentType: string,
     @Res({ passthrough: true }) res: FastifyReply
   ) {
-    const file: Stream = await this.fileService.getFile(path);
-    const type = this.getContentType(contentType);
-    res.type(type);
+    try {
+      if (!this.isValidLocalPath(path)) {
+        throw new BadRequestException('Invalid path for local file access');
+      }
 
-    return file;
+      const sanitizedPath = path.replace(/\.+/g, ''); // Remove any parent directory references
+      const file: Stream = await this.fileService.getFile(sanitizedPath);
+      const type = this.getContentType(contentType);
+      res.type(type);
+
+      return file;
+    } catch (err) {
+      this.logger.error('Error loading file', err.stack);
+      res.status(HttpStatus.INTERNAL_SERVER_ERROR).send({
+        error: 'Internal Server Error',
+        location: 'File loading failed'
+      });
+    }
   }
 
   @Get('/google')
@@ -121,6 +176,10 @@ export class FileController {
     @Query('type') contentType: string,
     @Res({ passthrough: true }) res: FastifyReply
   ) {
+    if (!this.isValidGooglePath(path)) {
+      throw new BadRequestException('Invalid path for Google metadata');
+    }
+
     const file: Stream = await this.loadCPFile(
       CloudProvidersMetaData.GOOGLE,
       path
@@ -159,6 +218,10 @@ export class FileController {
     @Query('type') contentType: string,
     @Res({ passthrough: true }) res: FastifyReply
   ) {
+    if (!this.isValidAwsPath(path)) {
+      throw new BadRequestException('Invalid path for AWS metadata');
+    }
+
     const file: Stream = await this.loadCPFile(
       CloudProvidersMetaData.AWS,
       path
@@ -197,6 +260,10 @@ export class FileController {
     @Query('type') contentType: string,
     @Res({ passthrough: true }) res: FastifyReply
   ) {
+    if (!this.isValidAzurePath(path)) {
+      throw new BadRequestException('Invalid path for Azure metadata');
+    }
+
     const file: Stream = await this.loadCPFile(
       CloudProvidersMetaData.AZURE,
       path
@@ -235,6 +302,10 @@ export class FileController {
     @Query('type') contentType: string,
     @Res({ passthrough: true }) res: FastifyReply
   ) {
+    if (!this.isValidDigitalOceanPath(path)) {
+      throw new BadRequestException('Invalid path for Digital Ocean metadata');
+    }
+
     const file: Stream = await this.loadCPFile(
       CloudProvidersMetaData.DIGITAL_OCEAN,
       path
@@ -321,8 +392,11 @@ export class FileController {
 
       return stream;
     } catch (err) {
-      this.logger.error(err.message);
-      res.status(HttpStatus.NOT_FOUND);
+      this.logger.error('File not found', err.stack);
+      res.status(HttpStatus.NOT_FOUND).send({
+        error: 'File not found',
+        location: 'Requested file could not be found'
+      });
     }
   }
 }
