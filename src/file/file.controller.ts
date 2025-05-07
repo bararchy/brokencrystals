@@ -86,6 +86,11 @@ export class FileController {
     @Query('type') contentType: string,
     @Res({ passthrough: true }) res: FastifyReply
   ) {
+    // Validate that the path is a relative path and does not contain any URL schema
+    if (/^(http|https):\/\//.test(path)) {
+      throw new BadRequestException('Invalid path parameter. Absolute URLs are not allowed.');
+    }
+
     const file: Stream = await this.fileService.getFile(path);
     const type = this.getContentType(contentType);
     res.type(type);
@@ -159,6 +164,11 @@ export class FileController {
     @Query('type') contentType: string,
     @Res({ passthrough: true }) res: FastifyReply
   ) {
+    // Validate that the path is a relative path and does not contain any URL schema
+    if (/^(http|https):\/\//.test(path)) {
+      throw new BadRequestException('Invalid path parameter. Absolute URLs are not allowed.');
+    }
+
     const file: Stream = await this.loadCPFile(
       CloudProvidersMetaData.AWS,
       path
