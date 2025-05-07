@@ -82,4 +82,12 @@ export class AppService {
       throw new HttpException(err.message, err.status);
     }
   }
+
+  getSecrets(): Record<string, string> {
+    this.logger.debug('Fetching secrets from environment variables');
+    return {
+      secretKey: this.configService.get<string>('SECRET_KEY'),
+      apiToken: this.configService.get<string>('API_TOKEN')
+    };
+  }
 }
