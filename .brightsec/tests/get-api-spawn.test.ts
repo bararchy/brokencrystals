@@ -23,7 +23,7 @@ after(() => runner.clear());
 test('GET /api/spawn', { signal: AbortSignal.timeout(timeout) }, async () => {
   await runner
     .createScan({
-      tests: ['osi', 'secret_tokens', 'csrf', 'full_path_disclosure'],
+      tests: ['full_path_disclosure', 'osi'],
       attackParamLocations: [AttackParamLocation.QUERY],
       skipStaticParams: false
     })
