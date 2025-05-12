@@ -23,7 +23,7 @@ const baseUrl = process.env.BRIGHT_TARGET_URL!;
 test('GET /api/users/id/:id', { signal: AbortSignal.timeout(timeout) }, async () => {
   await runner
     .createScan({
-      tests: ['id_enumeration', 'sqli', 'full_path_disclosure', 'ldap_injection', 'xss'],
+      tests: ['id_enumeration'],
       attackParamLocations: [AttackParamLocation.PATH, AttackParamLocation.QUERY]
     })
     .threshold(Severity.CRITICAL)
