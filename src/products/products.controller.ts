@@ -47,7 +47,7 @@ export class ProductsController {
 
   @Get()
   @UseGuards(AuthGuard)
-  @JwtType(JwtProcessorType.RSA)
+  @JwtType(JwtProcessorType.RSA_SIGNATURE)
   @ApiOperation({
     description: API_DESC_GET_PRODUCTS
   })
