@@ -1,6 +1,6 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { DOMParser } from '@xmldom/xmldom';
-import xpath, { SelectReturnType } from 'xpath';
+import xpath, { SelectReturnType, XPathSelect } from 'xpath';
 
 @Injectable()
 export class PartnersService {
@@ -60,18 +60,38 @@ export class PartnersService {
   }
 
   private selectPartnerPropertiesByXPATH(
-    xpathExpression: string
+    xpathExpression: string,
+    params: Record<string, string> = {}
   ): SelectReturnType {
     const partnersXMLObj = this.getPartnersXMLObj();
-    return xpath.select(xpathExpression, partnersXMLObj);
+    const select: XPathSelect = xpath.useNamespaces({});
+    return select(xpathExpression, partnersXMLObj, params);
   }
 
   private getFormattedXMLOutput(xmlNodes): string {
-    return `${this.XML_HEADER}\n<root>\n${xmlNodes.join('\n')}\n</root>`;
+    return `${this.XML_HEADER}
+<root>
+${xmlNodes.join('\n')}
+</root>`;
   }
 
   getPartnersProperties(xpathExpression: string): string {
     let xmlNodes = this.selectPartnerPropertiesByXPATH(xpathExpression);
+
+    if (!Array.isArray(xmlNodes)) {
+      this.logger.debug(
+        `xmlNodes's type wasn't 'Array', and it's value was: ${xmlNodes}`
+      );
+      xmlNodes = [];
+    } else {
+      this.logger.debug(`Raw xpath xmlNodes value is: ${xmlNodes}`);
+    }
+
+    return this.getFormattedXMLOutput(xmlNodes);
+  }
+
+  getPartnersPropertiesWithParams(xpathExpression: string, params: Record<string, string>): string {
+    let xmlNodes = this.selectPartnerPropertiesByXPATH(xpathExpression, params);
 
     if (!Array.isArray(xmlNodes)) {
       this.logger.debug(
