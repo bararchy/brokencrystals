@@ -129,10 +129,9 @@ export class AppController {
   @Header('content-type', 'text/xml')
   async xml(@Body() xml: string): Promise<string> {
     const xmlDoc = parseXml(decodeURIComponent(xml), {
-      noent: true, // Disable external entity expansion
+      noent: false, // Disable external entity expansion
       dtdload: false, // Disable DTD loading
       dtdattr: false, // Disable default DTD attributes
-      noent: false, // Disable external entity expansion
       dtdvalid: false, // Disable DTD validation
       recover: true
     });
