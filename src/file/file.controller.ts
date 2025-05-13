@@ -86,6 +86,9 @@ export class FileController {
     @Query('type') contentType: string,
     @Res({ passthrough: true }) res: FastifyReply
   ) {
+    if (!this.isValidPath(path) || this.isPathTraversal(path) || !this.isAllowedPath(path)) {
+      throw new BadRequestException('Invalid file path');
+    }
     const file: Stream = await this.fileService.getFile(path);
     const type = this.getContentType(contentType);
     res.type(type);
@@ -121,6 +124,9 @@ export class FileController {
     @Query('type') contentType: string,
     @Res({ passthrough: true }) res: FastifyReply
   ) {
+    if (!this.isValidPath(path) || this.isPathTraversal(path) || !this.isAllowedPath(path)) {
+      throw new BadRequestException('Invalid file path');
+    }
     const file: Stream = await this.loadCPFile(
       CloudProvidersMetaData.GOOGLE,
       path
@@ -159,6 +165,9 @@ export class FileController {
     @Query('type') contentType: string,
     @Res({ passthrough: true }) res: FastifyReply
   ) {
+    if (!this.isValidPath(path) || this.isPathTraversal(path) || !this.isAllowedPath(path)) {
+      throw new BadRequestException('Invalid file path');
+    }
     const file: Stream = await this.loadCPFile(
       CloudProvidersMetaData.AWS,
       path
@@ -197,6 +206,9 @@ export class FileController {
     @Query('type') contentType: string,
     @Res({ passthrough: true }) res: FastifyReply
   ) {
+    if (!this.isValidPath(path) || this.isPathTraversal(path) || !this.isAllowedPath(path)) {
+      throw new BadRequestException('Invalid file path');
+    }
     const file: Stream = await this.loadCPFile(
       CloudProvidersMetaData.AZURE,
       path
@@ -235,6 +247,9 @@ export class FileController {
     @Query('type') contentType: string,
     @Res({ passthrough: true }) res: FastifyReply
   ) {
+    if (!this.isValidPath(path) || this.isPathTraversal(path) || !this.isAllowedPath(path)) {
+      throw new BadRequestException('Invalid file path');
+    }
     const file: Stream = await this.loadCPFile(
       CloudProvidersMetaData.DIGITAL_OCEAN,
       path
@@ -324,5 +339,28 @@ export class FileController {
       this.logger.error(err.message);
       res.status(HttpStatus.NOT_FOUND);
     }
+  }
+
+  private isValidPath(filePath: string): boolean {
+    // Basic validation to prevent SSRF by ensuring the path is not a URL
+    try {
+      const url = new URL(filePath);
+      return false; // If it's a valid URL, return false
+    } catch (_) {
+      return true; // If it's not a valid URL, it's a valid path
+    }
+  }
+
+  private isPathTraversal(filePath: string): boolean {
+    // Prevent directory traversal by checking for '..' in the path
+    const normalizedPath = path.normalize(filePath);
+    return normalizedPath.includes('..');
+  }
+
+  private isAllowedPath(filePath: string): boolean {
+    // Allowlist approach: only allow paths within a specific directory
+    const allowedBasePath = path.resolve('config/products/crystals');
+    const resolvedPath = path.resolve(filePath);
+    return resolvedPath.startsWith(allowedBasePath);
   }
 }
