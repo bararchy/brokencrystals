@@ -86,11 +86,19 @@ export class FileController {
     @Query('type') contentType: string,
     @Res({ passthrough: true }) res: FastifyReply
   ) {
-    const file: Stream = await this.fileService.getFile(path);
-    const type = this.getContentType(contentType);
-    res.type(type);
+    if (!this.isValidPath(path) || this.isPathTraversal(path) || !this.isAllowedPath(path)) {
+      throw new BadRequestException('Invalid file path');
+    }
+    try {
+      const file: Stream = await this.fileService.getFile(path);
+      const type = this.getContentType(contentType);
+      res.type(type);
 
-    return file;
+      return file;
+    } catch (err) {
+      this.logger.error('Error loading file', err);
+      res.status(HttpStatus.INTERNAL_SERVER_ERROR).send({ error: 'Internal Server Error' });
+    }
   }
 
   @Get('/google')
@@ -121,14 +129,22 @@ export class FileController {
     @Query('type') contentType: string,
     @Res({ passthrough: true }) res: FastifyReply
   ) {
-    const file: Stream = await this.loadCPFile(
-      CloudProvidersMetaData.GOOGLE,
-      path
-    );
-    const type = this.getContentType(contentType);
-    res.type(type);
+    if (!this.isValidPath(path) || this.isPathTraversal(path) || !this.isAllowedPath(path)) {
+      throw new BadRequestException('Invalid file path');
+    }
+    try {
+      const file: Stream = await this.loadCPFile(
+        CloudProvidersMetaData.GOOGLE,
+        path
+      );
+      const type = this.getContentType(contentType);
+      res.type(type);
 
-    return file;
+      return file;
+    } catch (err) {
+      this.logger.error('Error loading Google file', err);
+      res.status(HttpStatus.INTERNAL_SERVER_ERROR).send({ error: 'Internal Server Error' });
+    }
   }
 
   @Get('/aws')
@@ -159,14 +175,22 @@ export class FileController {
     @Query('type') contentType: string,
     @Res({ passthrough: true }) res: FastifyReply
   ) {
-    const file: Stream = await this.loadCPFile(
-      CloudProvidersMetaData.AWS,
-      path
-    );
-    const type = this.getContentType(contentType);
-    res.type(type);
+    if (!this.isValidPath(path) || this.isPathTraversal(path) || !this.isAllowedPath(path)) {
+      throw new BadRequestException('Invalid file path');
+    }
+    try {
+      const file: Stream = await this.loadCPFile(
+        CloudProvidersMetaData.AWS,
+        path
+      );
+      const type = this.getContentType(contentType);
+      res.type(type);
 
-    return file;
+      return file;
+    } catch (err) {
+      this.logger.error('Error loading AWS file', err);
+      res.status(HttpStatus.INTERNAL_SERVER_ERROR).send({ error: 'Internal Server Error' });
+    }
   }
 
   @Get('/azure')
@@ -197,14 +221,22 @@ export class FileController {
     @Query('type') contentType: string,
     @Res({ passthrough: true }) res: FastifyReply
   ) {
-    const file: Stream = await this.loadCPFile(
-      CloudProvidersMetaData.AZURE,
-      path
-    );
-    const type = this.getContentType(contentType);
-    res.type(type);
+    if (!this.isValidPath(path) || this.isPathTraversal(path) || !this.isAllowedPath(path)) {
+      throw new BadRequestException('Invalid file path');
+    }
+    try {
+      const file: Stream = await this.loadCPFile(
+        CloudProvidersMetaData.AZURE,
+        path
+      );
+      const type = this.getContentType(contentType);
+      res.type(type);
 
-    return file;
+      return file;
+    } catch (err) {
+      this.logger.error('Error loading Azure file', err);
+      res.status(HttpStatus.INTERNAL_SERVER_ERROR).send({ error: 'Internal Server Error' });
+    }
   }
 
   @Get('/digital_ocean')
@@ -235,14 +267,22 @@ export class FileController {
     @Query('type') contentType: string,
     @Res({ passthrough: true }) res: FastifyReply
   ) {
-    const file: Stream = await this.loadCPFile(
-      CloudProvidersMetaData.DIGITAL_OCEAN,
-      path
-    );
-    const type = this.getContentType(contentType);
-    res.type(type);
+    if (!this.isValidPath(path) || this.isPathTraversal(path) || !this.isAllowedPath(path)) {
+      throw new BadRequestException('Invalid file path');
+    }
+    try {
+      const file: Stream = await this.loadCPFile(
+        CloudProvidersMetaData.DIGITAL_OCEAN,
+        path
+      );
+      const type = this.getContentType(contentType);
+      res.type(type);
 
-    return file;
+      return file;
+    } catch (err) {
+      this.logger.error('Error loading Digital Ocean file', err);
+      res.status(HttpStatus.INTERNAL_SERVER_ERROR).send({ error: 'Internal Server Error' });
+    }
   }
 
   @Delete()
@@ -321,8 +361,31 @@ export class FileController {
 
       return stream;
     } catch (err) {
-      this.logger.error(err.message);
-      res.status(HttpStatus.NOT_FOUND);
+      this.logger.error('Error reading file', err);
+      res.status(HttpStatus.NOT_FOUND).send({ error: 'File not found' });
     }
+  }
+
+  private isValidPath(filePath: string): boolean {
+    // Basic validation to prevent SSRF by ensuring the path is not a URL
+    try {
+      const url = new URL(filePath);
+      return false; // If it's a valid URL, return false
+    } catch (_) {
+      return true; // If it's not a valid URL, it's a valid path
+    }
+  }
+
+  private isPathTraversal(filePath: string): boolean {
+    // Prevent directory traversal by checking for '..' in the path
+    const normalizedPath = path.normalize(filePath);
+    return normalizedPath.includes('..');
+  }
+
+  private isAllowedPath(filePath: string): boolean {
+    // Allowlist approach: only allow paths within a specific directory
+    const allowedBasePath = path.resolve('config/products/crystals');
+    const resolvedPath = path.resolve(filePath);
+    return resolvedPath.startsWith(allowedBasePath);
   }
 }
