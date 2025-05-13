@@ -89,11 +89,16 @@ export class FileController {
     if (!this.isValidPath(path) || this.isPathTraversal(path) || !this.isAllowedPath(path)) {
       throw new BadRequestException('Invalid file path');
     }
-    const file: Stream = await this.fileService.getFile(path);
-    const type = this.getContentType(contentType);
-    res.type(type);
+    try {
+      const file: Stream = await this.fileService.getFile(path);
+      const type = this.getContentType(contentType);
+      res.type(type);
 
-    return file;
+      return file;
+    } catch (err) {
+      this.logger.error('Error loading file', err);
+      res.status(HttpStatus.INTERNAL_SERVER_ERROR).send({ error: 'Internal Server Error' });
+    }
   }
 
   @Get('/google')
@@ -127,14 +132,19 @@ export class FileController {
     if (!this.isValidPath(path) || this.isPathTraversal(path) || !this.isAllowedPath(path)) {
       throw new BadRequestException('Invalid file path');
     }
-    const file: Stream = await this.loadCPFile(
-      CloudProvidersMetaData.GOOGLE,
-      path
-    );
-    const type = this.getContentType(contentType);
-    res.type(type);
+    try {
+      const file: Stream = await this.loadCPFile(
+        CloudProvidersMetaData.GOOGLE,
+        path
+      );
+      const type = this.getContentType(contentType);
+      res.type(type);
 
-    return file;
+      return file;
+    } catch (err) {
+      this.logger.error('Error loading Google file', err);
+      res.status(HttpStatus.INTERNAL_SERVER_ERROR).send({ error: 'Internal Server Error' });
+    }
   }
 
   @Get('/aws')
@@ -168,14 +178,19 @@ export class FileController {
     if (!this.isValidPath(path) || this.isPathTraversal(path) || !this.isAllowedPath(path)) {
       throw new BadRequestException('Invalid file path');
     }
-    const file: Stream = await this.loadCPFile(
-      CloudProvidersMetaData.AWS,
-      path
-    );
-    const type = this.getContentType(contentType);
-    res.type(type);
+    try {
+      const file: Stream = await this.loadCPFile(
+        CloudProvidersMetaData.AWS,
+        path
+      );
+      const type = this.getContentType(contentType);
+      res.type(type);
 
-    return file;
+      return file;
+    } catch (err) {
+      this.logger.error('Error loading AWS file', err);
+      res.status(HttpStatus.INTERNAL_SERVER_ERROR).send({ error: 'Internal Server Error' });
+    }
   }
 
   @Get('/azure')
@@ -209,14 +224,19 @@ export class FileController {
     if (!this.isValidPath(path) || this.isPathTraversal(path) || !this.isAllowedPath(path)) {
       throw new BadRequestException('Invalid file path');
     }
-    const file: Stream = await this.loadCPFile(
-      CloudProvidersMetaData.AZURE,
-      path
-    );
-    const type = this.getContentType(contentType);
-    res.type(type);
+    try {
+      const file: Stream = await this.loadCPFile(
+        CloudProvidersMetaData.AZURE,
+        path
+      );
+      const type = this.getContentType(contentType);
+      res.type(type);
 
-    return file;
+      return file;
+    } catch (err) {
+      this.logger.error('Error loading Azure file', err);
+      res.status(HttpStatus.INTERNAL_SERVER_ERROR).send({ error: 'Internal Server Error' });
+    }
   }
 
   @Get('/digital_ocean')
@@ -250,14 +270,19 @@ export class FileController {
     if (!this.isValidPath(path) || this.isPathTraversal(path) || !this.isAllowedPath(path)) {
       throw new BadRequestException('Invalid file path');
     }
-    const file: Stream = await this.loadCPFile(
-      CloudProvidersMetaData.DIGITAL_OCEAN,
-      path
-    );
-    const type = this.getContentType(contentType);
-    res.type(type);
+    try {
+      const file: Stream = await this.loadCPFile(
+        CloudProvidersMetaData.DIGITAL_OCEAN,
+        path
+      );
+      const type = this.getContentType(contentType);
+      res.type(type);
 
-    return file;
+      return file;
+    } catch (err) {
+      this.logger.error('Error loading Digital Ocean file', err);
+      res.status(HttpStatus.INTERNAL_SERVER_ERROR).send({ error: 'Internal Server Error' });
+    }
   }
 
   @Delete()
@@ -336,8 +361,8 @@ export class FileController {
 
       return stream;
     } catch (err) {
-      this.logger.error(err.message);
-      res.status(HttpStatus.NOT_FOUND);
+      this.logger.error('Error reading file', err);
+      res.status(HttpStatus.NOT_FOUND).send({ error: 'File not found' });
     }
   }
 

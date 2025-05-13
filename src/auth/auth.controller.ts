@@ -298,9 +298,14 @@ export class AuthController {
     description: SWAGGER_DESC_VALIDATE_WITH_KID_SQL_JWT
   })
   async validateWithKIDSqlJwt(): Promise<JwtValidationResponse> {
-    return {
-      secret: 'this is our secret'
-    };
+    try {
+      return {
+        secret: 'this is our secret'
+      };
+    } catch (error) {
+      this.logger.error('Error in validateWithKIDSqlJwt', error);
+      throw new InternalServerErrorException('An error occurred while processing your request.');
+    }
   }
 
   @Post('jwt/weak-key/login')
