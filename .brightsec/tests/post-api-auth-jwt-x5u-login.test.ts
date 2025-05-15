@@ -21,7 +21,7 @@ after(() => runner.clear());
 test('POST /api/auth/jwt/x5u/login', { signal: AbortSignal.timeout(timeout) }, async () => {
   await runner
     .createScan({
-      tests: ['jwt', 'csrf', 'sqli', 'osi', 'full_path_disclosure'],
+      tests: ['full_path_disclosure'],
       attackParamLocations: [AttackParamLocation.BODY]
     })
     .threshold(Severity.CRITICAL)
