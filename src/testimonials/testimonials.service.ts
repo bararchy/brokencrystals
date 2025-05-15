@@ -56,6 +56,8 @@ export class TestimonialsService {
 
   async count(query: string): Promise<number> {
     this.logger.debug(`Executing count query`);
-    return (await this.em.getConnection().execute(query))[0].count as number;
+    const sql = 'SELECT COUNT(*) as count FROM testimonial WHERE message LIKE ?';
+    const result = await this.em.getConnection().execute(sql, [query]);
+    return result[0].count as number;
   }
 }
