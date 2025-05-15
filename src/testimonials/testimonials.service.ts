@@ -54,8 +54,11 @@ export class TestimonialsService {
     return t;
   }
 
-  async count(query: string): Promise<number> {
+  async count(): Promise<number> {
     this.logger.debug(`Executing count query`);
-    return (await this.em.getConnection().execute(query))[0].count as number;
+    const result = await this.em
+      .getConnection()
+      .execute('SELECT COUNT(*) as count FROM testimonial');
+    return result[0].count as number;
   }
 }
