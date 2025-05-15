@@ -129,7 +129,7 @@ export class AppController {
   @Header('content-type', 'text/xml')
   async xml(@Body() xml: string): Promise<string> {
     const xmlDoc = parseXml(decodeURIComponent(xml), {
-      noent: false, // Disable external entity expansion
+      noent: true, // Disable external entity expansion
       dtdvalid: false, // Disable DTD validation
       recover: true
     });
@@ -265,7 +265,7 @@ export class AppController {
       }
     }
   })
-  async getUserInfoV2(@Param('email') email: string): Promise<UserDto> {
+  async getUserInfoV2(@Param('email') email: Promise<UserDto> {
     try {
       return await this.appService.getUserInfo(email);
     } catch (err) {
