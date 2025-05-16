@@ -86,11 +86,6 @@ export class TestimonialsController {
   }
 
   @Get('count')
-  @ApiQuery({
-    name: 'query',
-    example: 'select count(*) as count from testimonial',
-    required: true
-  })
   @Header('content-type', 'text/html')
   @ApiOperation({
     description: API_DESC_GET_TESTIMONIALS_ON_SQL_QUERY
@@ -98,10 +93,10 @@ export class TestimonialsController {
   @ApiOkResponse({
     type: String
   })
-  async getCount(@Query('query') query: string): Promise<number | string> {
+  async getCount(): Promise<number | string> {
     this.logger.debug('Get count of testimonials.');
     try {
-      return await this.testimonialsService.count(query);
+      return await this.testimonialsService.count();
     } catch (error) {
       this.logger.error('Error fetching testimonial count', error);
       return 'An error occurred while processing your request.';

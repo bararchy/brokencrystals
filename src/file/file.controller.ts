@@ -58,10 +58,11 @@ export class FileController {
     return file;
   }
 
-  private isValidPath(path: string): boolean {
+  private isValidPath(filePath: string): boolean {
     // Implement a whitelist of allowed paths or a regex pattern to validate paths
-    const allowedPaths = ['config/products/crystals/']; // Example whitelist
-    return allowedPaths.some(allowedPath => path.startsWith(allowedPath));
+    const basePath = path.resolve('config/products/crystals'); // Base directory
+    const resolvedPath = path.resolve(basePath, filePath); // Resolve against base
+    return resolvedPath.startsWith(basePath); // Ensure the resolved path is within the base directory
   }
 
   private isValidUrl(url: string): boolean {

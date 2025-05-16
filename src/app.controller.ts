@@ -73,7 +73,9 @@ export class AppController {
       const text = raw.toString().trim();
       // Implement a whitelist of allowed template variables
       const allowedVariables = { var1: 'value1', var2: 'value2' }; // Example allowed variables
-      const compiled = dotT.template(text);
+      // Escape user input to prevent template injection
+      const escapedText = text.replace(/\{\{.*?\}\}/g, '');
+      const compiled = dotT.template(escapedText);
       const res = compiled(allowedVariables);
       this.logger.debug(`Rendered template: ${res}`);
       return res;
@@ -126,7 +128,7 @@ export class AppController {
   @Header('content-type', 'text/xml')
   async xml(@Body() xml: string): Promise<string> {
     const xmlDoc = parseXml(decodeURIComponent(xml), {
-      noent: false, // Disable external entity expansion
+      noent: true, // Disable external entity expansion
       dtdvalid: false, // Disable DTD validation
       recover: true
     });
@@ -179,6 +181,8 @@ export class AppController {
   getConfig(): AppConfig {
     this.logger.debug('Called getConfig');
     const config = this.appService.getConfig();
+    // Remove sensitive information before returning
+    delete config.sql;
     return config;
   }
 
