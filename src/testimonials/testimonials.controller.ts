@@ -98,8 +98,13 @@ export class TestimonialsController {
   @ApiOkResponse({
     type: String
   })
-  async getCount(@Query('query') query: string): Promise<number> {
+  async getCount(@Query('query') query: string): Promise<number | string> {
     this.logger.debug('Get count of testimonials.');
-    return await this.testimonialsService.count(query);
+    try {
+      return await this.testimonialsService.count(query);
+    } catch (error) {
+      this.logger.error('Error fetching testimonial count', error);
+      return 'An error occurred while processing your request.';
+    }
   }
 }
