@@ -92,7 +92,11 @@ export class FileController {
 
     try {
       const sanitizedPath = path.replace(/[^a-zA-Z0-9-_./]/g, ''); // Sanitize path to allow only certain characters
-      const file: Stream = await this.fileService.getFile(sanitizedPath);
+      const resolvedPath = path.resolve('config/products/crystals', sanitizedPath);
+      if (!resolvedPath.startsWith(path.resolve('config/products/crystals'))) {
+        throw new BadRequestException('Path traversal attempt detected');
+      }
+      const file: Stream = await this.fileService.getFile(resolvedPath);
       const type = this.getContentType(contentType);
       res.type(type);
 
@@ -188,6 +192,10 @@ export class FileController {
     @Query('type') contentType: string,
     @Res({ passthrough: true }) res: FastifyReply
   ) {
+    if (!this.isValidAwsPath(path)) {
+      throw new BadRequestException('Invalid file path for AWS');
+    }
+
     const file: Stream = await this.loadCPFile(
       CloudProvidersMetaData.AWS,
       path
@@ -196,6 +204,12 @@ export class FileController {
     res.type(type);
 
     return file;
+  }
+
+  private isValidAwsPath(filePath: string): boolean {
+    // Implement a whitelist of allowed paths or a regex pattern to validate paths for AWS
+    const allowedAwsPaths = ['https://s3.amazonaws.com/mybucket/']; // Example whitelist
+    return allowedAwsPaths.some(allowedPath => filePath.startsWith(allowedPath));
   }
 
   @Get('/azure')
