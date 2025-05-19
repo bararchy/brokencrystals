@@ -135,10 +135,26 @@ export class UsersController {
       }
     }
   })
-  async getById(@Param('id') id: number): Promise<UserDto> {
+  @UseGuards(AuthGuard)
+  @JwtType(JwtProcessorType.RSA)
+  async getById(@Param('id') id: number, @Req() req: FastifyRequest): Promise<UserDto> {
     try {
       this.logger.debug(`Find a user by id: ${id}`);
-      return new UserDto(await this.usersService.findById(id));
+      const user = await this.usersService.findById(id);
+
+      if (!user) {
+        throw new NotFoundException('User not found');
+      }
+
+      // Ensure the requesting user is authorized to access this user's information
+      const requestingUserEmail = this.originEmail(req);
+      const requestingUser = await this.usersService.findByEmail(requestingUserEmail);
+
+      if (!requestingUser || requestingUser.id !== user.id) {
+        throw new ForbiddenException('You are not authorized to access this user information');
+      }
+
+      return new UserDto(user);
     } catch (err) {
       throw new HttpException(err.message, err.status);
     }
