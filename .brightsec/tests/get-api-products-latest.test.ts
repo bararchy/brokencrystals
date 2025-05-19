@@ -1,3 +1,4 @@
+```
 import { test, before, after } from 'node:test';
 import { SecRunner } from '@sectester/runner';
 import { Severity, AttackParamLocation, HttpMethod } from '@sectester/scan';
@@ -32,3 +33,4 @@ test('GET /api/products/latest', { signal: AbortSignal.timeout(timeout) }, async
       url: `${baseUrl}/api/products/latest?limit=3`
     });
 });
+```
