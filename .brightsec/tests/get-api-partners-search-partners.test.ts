@@ -1,3 +1,4 @@
+```
 import { test, before, after } from 'node:test';
 import { SecRunner } from '@sectester/runner';
 import { Severity, AttackParamLocation, HttpMethod } from '@sectester/scan';
@@ -32,3 +33,5 @@ test('GET /api/partners/searchPartners', { signal: AbortSignal.timeout(timeout) 
       headers: { 'Content-Type': 'text/xml' }
     });
 });
+
+```
