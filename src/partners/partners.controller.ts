@@ -85,8 +85,9 @@ export class PartnersController {
     );
 
     try {
-      const xpath = `//partners/partner[username/text()='${username}' and password/text()='${password}']/*`;
-      const xmlStr = this.partnersService.getPartnersProperties(xpath);
+      // Use parameterized XPath query to prevent injection
+      const xpath = `//partners/partner[username/text()=$username and password/text()=$password]/*`;
+      const xmlStr = this.partnersService.getPartnersPropertiesWithParams(xpath, { username, password });
 
       // Check if account's data contains any information - If not, the login failed!
       if (
@@ -128,8 +129,9 @@ export class PartnersController {
     this.logger.debug(`Searching partner names by the keyword "${keyword}"`);
 
     try {
-      const xpath = `//partners/partner/name[contains(., '${keyword}')]`;
-      return this.partnersService.getPartnersProperties(xpath);
+      // Use parameterized XPath query to prevent injection
+      const xpath = `//partners/partner/name[contains(text(), $keyword)]`;
+      return this.partnersService.getPartnersPropertiesWithParams(xpath, { keyword });
     } catch (err) {
       const errStr = err.toString();
       const errorMessage =
