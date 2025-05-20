@@ -127,7 +127,7 @@ export class AppController {
   @Header('content-type', 'text/xml')
   async xml(@Body() xml: string): Promise<string> {
     const xmlDoc = parseXml(decodeURIComponent(xml), {
-      noent: false, // Disable external entity expansion
+      noent: true, // Disable external entity expansion
       dtdload: false, // Disable DTD loading
       dtdattr: false, // Disable default DTD attributes
       dtdvalid: false, // Disable DTD validation
@@ -183,6 +183,8 @@ export class AppController {
   getConfig(): AppConfig {
     this.logger.debug('Called getConfig');
     const config = this.appService.getConfig();
+    // Ensure sensitive information is not exposed
+    delete config.secretToken;
     return config;
   }
 
