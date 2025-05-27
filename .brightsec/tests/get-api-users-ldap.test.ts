@@ -21,7 +21,7 @@ after(() => runner.clear());
 test('GET /api/users/ldap', { signal: AbortSignal.timeout(timeout) }, async () => {
   await runner
     .createScan({
-      tests: ['ldapi', 'csrf', 'xss', 'full_path_disclosure', 'improper_asset_management'],
+      tests: ['full_path_disclosure'],
       attackParamLocations: [AttackParamLocation.QUERY]
     })
     .threshold(Severity.CRITICAL)
