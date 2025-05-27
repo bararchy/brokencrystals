@@ -40,7 +40,7 @@ export class TestimonialsController {
     type: TestimonialDto
   })
   @UseGuards(AuthGuard)
-  @JwtType(JwtProcessorType.RSA)
+  @JwtType(JwtProcessorType.RSA) // Ensure the JWT type is set to RSA for secure validation
   @ApiOperation({
     description: API_DESC_CREATE_TESTIMONIAL
   })
@@ -86,11 +86,6 @@ export class TestimonialsController {
   }
 
   @Get('count')
-  @ApiQuery({
-    name: 'query',
-    example: 'select count(*) as count from testimonial',
-    required: true
-  })
   @Header('content-type', 'text/html')
   @ApiOperation({
     description: API_DESC_GET_TESTIMONIALS_ON_SQL_QUERY
@@ -98,8 +93,13 @@ export class TestimonialsController {
   @ApiOkResponse({
     type: String
   })
-  async getCount(@Query('query') query: string): Promise<number> {
+  async getCount(): Promise<number> {
     this.logger.debug('Get count of testimonials.');
-    return await this.testimonialsService.count(query);
+    try {
+      return await this.testimonialsService.count();
+    } catch (error) {
+      this.logger.error('Error occurred while getting testimonials count', error);
+      throw new Error('Unable to retrieve testimonials count at this time.');
+    }
   }
 }
