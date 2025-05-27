@@ -50,7 +50,7 @@ export class FileController {
 
   private async loadCPFile(cpBaseUrl: string, path: string) {
     if (!path.startsWith(cpBaseUrl)) {
-      throw new BadRequestException(`Invalid paramater 'path' ${path}`);
+      throw new BadRequestException(`Invalid parameter 'path' ${path}`);
     }
 
     const file: Stream = await this.fileService.getFile(path);
@@ -86,11 +86,27 @@ export class FileController {
     @Query('type') contentType: string,
     @Res({ passthrough: true }) res: FastifyReply
   ) {
-    const file: Stream = await this.fileService.getFile(path);
-    const type = this.getContentType(contentType);
-    res.type(type);
+    if (!this.isValidPath(path)) {
+      throw new BadRequestException('Invalid file path');
+    }
 
-    return file;
+    try {
+      const sanitizedPath = path.replace(/[^a-zA-Z0-9-_./]/g, ''); // Sanitize path to allow only certain characters
+      const file: Stream = await this.fileService.getFile(sanitizedPath);
+      const type = this.getContentType(contentType);
+      res.type(type);
+
+      return file;
+    } catch (err) {
+      this.logger.error('Error loading file', err);
+      res.status(HttpStatus.INTERNAL_SERVER_ERROR).send({ error: 'Internal Server Error' });
+    }
+  }
+
+  private isValidPath(filePath: string): boolean {
+    // Implement a whitelist of allowed paths or a regex pattern to validate paths
+    const allowedPaths = ['config/products/crystals/']; // Example whitelist
+    return allowedPaths.some(allowedPath => filePath.startsWith(allowedPath));
   }
 
   @Get('/google')
@@ -121,6 +137,10 @@ export class FileController {
     @Query('type') contentType: string,
     @Res({ passthrough: true }) res: FastifyReply
   ) {
+    if (!this.isValidGooglePath(path)) {
+      throw new BadRequestException('Invalid file path for Google');
+    }
+
     const file: Stream = await this.loadCPFile(
       CloudProvidersMetaData.GOOGLE,
       path
@@ -129,6 +149,12 @@ export class FileController {
     res.type(type);
 
     return file;
+  }
+
+  private isValidGooglePath(filePath: string): boolean {
+    // Implement a whitelist of allowed paths or a regex pattern to validate paths for Google
+    const allowedPaths = ['http://metadata.google.internal/computeMetadata/v1/']; // Example whitelist
+    return allowedPaths.some(allowedPath => filePath.startsWith(allowedPath));
   }
 
   @Get('/aws')
@@ -197,6 +223,10 @@ export class FileController {
     @Query('type') contentType: string,
     @Res({ passthrough: true }) res: FastifyReply
   ) {
+    if (!this.isValidAzurePath(path)) {
+      throw new BadRequestException('Invalid file path for Azure');
+    }
+
     const file: Stream = await this.loadCPFile(
       CloudProvidersMetaData.AZURE,
       path
@@ -205,6 +235,12 @@ export class FileController {
     res.type(type);
 
     return file;
+  }
+
+  private isValidAzurePath(filePath: string): boolean {
+    // Implement a whitelist of allowed paths or a regex pattern to validate paths for Azure
+    const allowedPaths = ['https://example.blob.core.windows.net/']; // Example whitelist
+    return allowedPaths.some(allowedPath => filePath.startsWith(allowedPath));
   }
 
   @Get('/digital_ocean')
@@ -235,6 +271,10 @@ export class FileController {
     @Query('type') contentType: string,
     @Res({ passthrough: true }) res: FastifyReply
   ) {
+    if (!this.isValidDigitalOceanPath(path)) {
+      throw new BadRequestException('Invalid file path for Digital Ocean');
+    }
+
     const file: Stream = await this.loadCPFile(
       CloudProvidersMetaData.DIGITAL_OCEAN,
       path
@@ -243,6 +283,12 @@ export class FileController {
     res.type(type);
 
     return file;
+  }
+
+  private isValidDigitalOceanPath(filePath: string): boolean {
+    // Implement a whitelist of allowed paths or a regex pattern to validate paths for Digital Ocean
+    const allowedPaths = ['http://169.254.169.254/metadata/v1/']; // Example whitelist
+    return allowedPaths.some(allowedPath => filePath.startsWith(allowedPath));
   }
 
   @Delete()
@@ -321,8 +367,8 @@ export class FileController {
 
       return stream;
     } catch (err) {
-      this.logger.error(err.message);
-      res.status(HttpStatus.NOT_FOUND);
+      this.logger.error('File not found', err);
+      res.status(HttpStatus.NOT_FOUND).send({ error: 'File not found' });
     }
   }
 }
