@@ -6,7 +6,8 @@ import {
   Logger,
   Post,
   Query,
-  UseGuards
+  UseGuards,
+  InternalServerErrorException
 } from '@nestjs/common';
 import {
   ApiBody,
@@ -89,7 +90,7 @@ export class TestimonialsController {
   @ApiQuery({
     name: 'query',
     example: 'select count(*) as count from testimonial',
-    required: true
+    required: false
   })
   @Header('content-type', 'text/html')
   @ApiOperation({
@@ -98,8 +99,13 @@ export class TestimonialsController {
   @ApiOkResponse({
     type: String
   })
-  async getCount(@Query('query') query: string): Promise<number> {
+  async getCount(): Promise<number> {
     this.logger.debug('Get count of testimonials.');
-    return await this.testimonialsService.count(query);
+    try {
+      return await this.testimonialsService.count();
+    } catch (error) {
+      this.logger.error('Error fetching testimonial count', error.stack);
+      throw new InternalServerErrorException('An error occurred while processing your request.');
+    }
   }
 }
