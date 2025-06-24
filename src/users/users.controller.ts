@@ -135,10 +135,18 @@ export class UsersController {
       }
     }
   })
-  async getById(@Param('id') id: number): Promise<UserDto> {
+  @UseGuards(AuthGuard)
+  async getById(@Param('id') id: number, @Req() req: FastifyRequest): Promise<UserDto> {
     try {
       this.logger.debug(`Find a user by id: ${id}`);
-      return new UserDto(await this.usersService.findById(id));
+      const user = await this.usersService.findById(id);
+      if (!user) {
+        throw new NotFoundException('User not found');
+      }
+      if (this.originEmail(req) !== user.email) {
+        throw new ForbiddenException('You are not authorized to access this user information');
+      }
+      return new UserDto(user);
     } catch (err) {
       throw new HttpException(err.message, err.status);
     }
@@ -218,7 +226,7 @@ export class UsersController {
     if (!user) {
       throw new NotFoundException({
         error: 'Could not file user',
-        location: __filename
+        location: 'UserController'
       });
     }
 
@@ -232,7 +240,7 @@ export class UsersController {
     } catch (err) {
       throw new InternalServerErrorException({
         error: err.message,
-        location: __filename
+        location: 'UserController'
       });
     }
   }
@@ -271,7 +279,7 @@ export class UsersController {
     if (!user) {
       throw new NotFoundException({
         error: 'Could not file user',
-        location: __filename
+        location: 'UserController'
       });
     }
 
@@ -311,7 +319,7 @@ export class UsersController {
     } catch (err) {
       throw new InternalServerErrorException({
         error: err.message,
-        location: __filename
+        location: 'UserController'
       });
     }
 
@@ -463,8 +471,7 @@ export class UsersController {
       type: 'object',
       properties: {
         statusCode: { type: 'number' },
-        message: { type: 'string' },
-        error: { type: 'string' }
+        message: { type: 'string' }
       }
     }
   })
@@ -553,7 +560,7 @@ export class UsersController {
     } catch (err) {
       throw new InternalServerErrorException({
         error: err.message,
-        location: __filename
+        location: 'UserController'
       });
     }
   }
