@@ -86,11 +86,30 @@ export class FileController {
     @Query('type') contentType: string,
     @Res({ passthrough: true }) res: FastifyReply
   ) {
-    const file: Stream = await this.fileService.getFile(path);
-    const type = this.getContentType(contentType);
-    res.type(type);
+    if (path.startsWith('http://') || path.startsWith('https://')) {
+      throw new BadRequestException('Invalid path parameter');
+    }
+    if (path.includes('..')) {
+      throw new BadRequestException('Path traversal is not allowed');
+    }
 
-    return file;
+    // Allowlist approach for file paths
+    const allowedPaths = ['config/products/crystals/'];
+    const isValidPath = allowedPaths.some(allowedPath => path.startsWith(allowedPath));
+    if (!isValidPath) {
+      throw new BadRequestException('Access to the specified path is not allowed');
+    }
+
+    try {
+      const file: Stream = await this.fileService.getFile(path);
+      const type = this.getContentType(contentType);
+      res.type(type);
+
+      return file;
+    } catch (err) {
+      this.logger.error('Error loading file', err);
+      res.status(HttpStatus.INTERNAL_SERVER_ERROR).send({ error: 'Internal Server Error' });
+    }
   }
 
   @Get('/google')
@@ -121,6 +140,9 @@ export class FileController {
     @Query('type') contentType: string,
     @Res({ passthrough: true }) res: FastifyReply
   ) {
+    if (path.startsWith('http://') || path.startsWith('https://')) {
+      throw new BadRequestException('Invalid path parameter');
+    }
     const file: Stream = await this.loadCPFile(
       CloudProvidersMetaData.GOOGLE,
       path
@@ -159,6 +181,9 @@ export class FileController {
     @Query('type') contentType: string,
     @Res({ passthrough: true }) res: FastifyReply
   ) {
+    if (path.startsWith('http://') || path.startsWith('https://')) {
+      throw new BadRequestException('Invalid path parameter');
+    }
     const file: Stream = await this.loadCPFile(
       CloudProvidersMetaData.AWS,
       path
@@ -197,6 +222,9 @@ export class FileController {
     @Query('type') contentType: string,
     @Res({ passthrough: true }) res: FastifyReply
   ) {
+    if (path.startsWith('http://') || path.startsWith('https://')) {
+      throw new BadRequestException('Invalid path parameter');
+    }
     const file: Stream = await this.loadCPFile(
       CloudProvidersMetaData.AZURE,
       path
@@ -235,6 +263,9 @@ export class FileController {
     @Query('type') contentType: string,
     @Res({ passthrough: true }) res: FastifyReply
   ) {
+    if (path.startsWith('http://') || path.startsWith('https://')) {
+      throw new BadRequestException('Invalid path parameter');
+    }
     const file: Stream = await this.loadCPFile(
       CloudProvidersMetaData.DIGITAL_OCEAN,
       path
