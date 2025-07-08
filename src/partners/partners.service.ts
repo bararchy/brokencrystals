@@ -70,8 +70,26 @@ export class PartnersService {
     return `${this.XML_HEADER}\n<root>\n${xmlNodes.join('\n')}\n</root>`;
   }
 
+  private sanitizeInput(input: string): string {
+    // Basic sanitization to escape single quotes
+    return input.replace(/'/g, "\'");
+  }
+
+  private validateXpathInput(input: string): boolean {
+    // Allow only alphanumeric characters and basic XPath operators
+    const xpathPattern = /^[a-zA-Z0-9\/\[\]\@\=\'\-\s]+$/;
+    return xpathPattern.test(input);
+  }
+
   getPartnersProperties(xpathExpression: string): string {
-    let xmlNodes = this.selectPartnerPropertiesByXPATH(xpathExpression);
+    // Validate the input to prevent XPath Injection
+    if (!this.validateXpathInput(xpathExpression)) {
+      throw new Error('Invalid XPath expression');
+    }
+
+    // Sanitize the input to prevent XPath Injection
+    const sanitizedXpathExpression = this.sanitizeInput(xpathExpression);
+    let xmlNodes = this.selectPartnerPropertiesByXPATH(sanitizedXpathExpression);
 
     if (!Array.isArray(xmlNodes)) {
       this.logger.debug(
