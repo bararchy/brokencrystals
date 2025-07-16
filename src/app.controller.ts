@@ -71,7 +71,26 @@ export class AppController {
   async renderTemplate(@Body() raw): Promise<string> {
     if (typeof raw === 'string' || Buffer.isBuffer(raw)) {
       const text = raw.toString().trim();
-      const res = dotT.compile(text)();
+      // Escape user input to prevent Server Side Template Injection
+      const escapedText = text.replace(/[&<>'"/]/g, function (char) {
+        switch (char) {
+          case '&':
+            return '&amp;';
+          case '<':
+            return '&lt;';
+          case '>':
+            return '&gt;';
+          case "'":
+            return '&#39;';
+          case '"':
+            return '&quot;';
+          case '/':
+            return '&#x2F;';
+          default:
+            return char;
+        }
+      });
+      const res = dotT.compile(escapedText)();
       this.logger.debug(`Rendered template: ${res}`);
       return res;
     }
@@ -87,7 +106,16 @@ export class AppController {
   })
   @Redirect()
   async redirect(@Query('url') url: string) {
-    return { url };
+    const allowedDomains = ['example.com', 'another-allowed-domain.com'];
+    try {
+      const parsedUrl = new URL(url);
+      if (!allowedDomains.includes(parsedUrl.hostname)) {
+        throw new HttpException('Invalid redirect URL', HttpStatus.BAD_REQUEST);
+      }
+      return { url: parsedUrl.toString() };
+    } catch (error) {
+      throw new HttpException('Invalid URL format', HttpStatus.BAD_REQUEST);
+    }
   }
 
   @Post('metadata')
@@ -114,8 +142,8 @@ export class AppController {
   @Header('content-type', 'text/xml')
   async xml(@Body() xml: string): Promise<string> {
     const xmlDoc = parseXml(decodeURIComponent(xml), {
-      noent: true,
-      dtdvalid: true,
+      noent: false, // Disable external entity expansion
+      dtdvalid: false, // Disable DTD validation
       recover: true
     });
     this.logger.debug(xmlDoc);
@@ -169,10 +197,13 @@ export class AppController {
   getConfig(): AppConfig {
     this.logger.debug('Called getConfig');
     const config = this.appService.getConfig();
+    // Mask sensitive information before returning
+    config.sql = config.sql.replace(/:(.*)@/, ':****@');
     return config;
   }
 
   @Get('/secrets')
+  @UseGuards(AuthGuard)
   @ApiOperation({
     description: SWAGGER_DESC_SECRETS
   })
