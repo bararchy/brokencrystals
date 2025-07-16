@@ -90,7 +90,8 @@ export class AppController {
             return char;
         }
       });
-      const res = dotT.compile(escapedText)();
+      // Use a safe template rendering method
+      const res = dotT.template(escapedText)();
       this.logger.debug(`Rendered template: ${res}`);
       return res;
     }
