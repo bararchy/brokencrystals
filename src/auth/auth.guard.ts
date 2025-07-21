@@ -71,7 +71,7 @@ export class AuthGuard implements CanActivate {
       context.getHandler()
     );
 
-    if (processorType === JwtProcessorType.BEARER) {
+    if (processorType === JwtProcessorType.BEARER || processorType === JwtProcessorType.NONE) {
       throw new UnauthorizedException('None algorithm is not allowed');
     }
 
