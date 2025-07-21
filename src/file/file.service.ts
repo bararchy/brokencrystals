@@ -37,6 +37,11 @@ export class FileService {
         throw new Error('Access to internal or metadata services is not allowed.');
       }
 
+      // Ensure the URL is using HTTPS
+      if (url.protocol !== 'https:') {
+        throw new Error('Only HTTPS protocol is allowed for external requests.');
+      }
+
       const content = await this.cloudProviders.get(file);
 
       if (content) {
