@@ -6,6 +6,7 @@ import { AppModuleConfigProperties } from './app.module.config.properties';
 import { OrmModuleConfigProperties } from './orm/orm.module.config.properties';
 import { AppConfig } from './app.config.api';
 import { UserDto } from './users/api/UserDto';
+import * as libxmljs from 'libxmljs';
 
 @Injectable()
 export class AppService {
@@ -63,11 +64,12 @@ export class AppService {
         OrmModuleConfigProperties.ENV_DATABASE_PASSWORD
       );
 
+    // Ensure sensitive information is not exposed
     return {
       awsBucket: this.configService.get<string>(
         AppModuleConfigProperties.ENV_AWS_BUCKET
       ),
-      sql: `postgres://${dbUser}:${dbPwd}@${dbHost}:${dbPort}/${dbSchema} `,
+      sql: `postgres://${dbUser}:****@${dbHost}:${dbPort}/${dbSchema} `, // Mask password
       googlemaps: this.configService.get<string>(
         AppModuleConfigProperties.ENV_GOOGLE_MAPS
       )
@@ -81,5 +83,14 @@ export class AppService {
     } catch (err) {
       throw new HttpException(err.message, err.status);
     }
+  }
+
+  parseXml(xml: string): libxmljs.Document {
+    return libxmljs.parseXml(xml, {
+      noent: false, // Disable external entity expansion
+      dtdload: false, // Disable DTD loading
+      dtdvalid: false, // Disable DTD validation
+      recover: true
+    });
   }
 }

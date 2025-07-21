@@ -32,7 +32,6 @@ import {
   ApiTags
 } from '@nestjs/swagger';
 import * as dotT from 'dot';
-import { parseXml } from 'libxmljs';
 import { AppConfig } from './app.config.api';
 import {
   API_DESC_CONFIG_SERVER,
@@ -71,7 +70,9 @@ export class AppController {
   async renderTemplate(@Body() raw): Promise<string> {
     if (typeof raw === 'string' || Buffer.isBuffer(raw)) {
       const text = raw.toString().trim();
-      const res = dotT.compile(text)();
+      // Sanitize input to prevent Server Side Template Injection
+      const sanitizedText = text.replace(/\{\{.*?\}\}/g, '');
+      const res = dotT.compile(sanitizedText)();
       this.logger.debug(`Rendered template: ${res}`);
       return res;
     }
@@ -87,7 +88,16 @@ export class AppController {
   })
   @Redirect()
   async redirect(@Query('url') url: string) {
-    return { url };
+    const allowedHosts = ['example.com', 'another-allowed-domain.com'];
+    try {
+      const parsedUrl = new URL(url);
+      if (!allowedHosts.includes(parsedUrl.hostname)) {
+        throw new HttpException('Invalid redirect URL', HttpStatus.BAD_REQUEST);
+      }
+      return { url: parsedUrl.toString() };
+    } catch (error) {
+      throw new HttpException('Invalid URL format', HttpStatus.BAD_REQUEST);
+    }
   }
 
   @Post('metadata')
@@ -113,11 +123,7 @@ export class AppController {
   })
   @Header('content-type', 'text/xml')
   async xml(@Body() xml: string): Promise<string> {
-    const xmlDoc = parseXml(decodeURIComponent(xml), {
-      noent: true,
-      dtdvalid: true,
-      recover: true
-    });
+    const xmlDoc = this.appService.parseXml(decodeURIComponent(xml));
     this.logger.debug(xmlDoc);
     this.logger.debug(xmlDoc.getDtd());
 
@@ -179,6 +185,7 @@ export class AppController {
   @ApiOkResponse({
     type: Object
   })
+  @UseGuards(AuthGuard)
   getSecrets(): Record<string, string> {
     const secrets = {
       codeclimate:

@@ -71,13 +71,14 @@ export class AuthGuard implements CanActivate {
       context.getHandler()
     );
 
+    if (processorType === JwtProcessorType.BEARER) {
+      throw new UnauthorizedException('None algorithm is not allowed');
+    }
+
     try {
       return !!(await this.authService.validateToken(token, processorType));
     } catch {
-      return !!(await this.authService.validateToken(
-        token,
-        JwtProcessorType.BEARER
-      ));
+      return false;
     }
   }
 
