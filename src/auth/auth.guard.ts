@@ -36,8 +36,7 @@ export class AuthGuard implements CanActivate {
     } catch (err) {
       this.logger.debug(`Failed to validate token: ${err.message}`);
       throw new UnauthorizedException({
-        error: 'Unauthorized',
-        line: __filename
+        error: 'Unauthorized'
       });
     }
   }
@@ -70,6 +69,12 @@ export class AuthGuard implements CanActivate {
       JwTypeMetadataField,
       context.getHandler()
     );
+
+    if (processorType === JwtProcessorType.BEARER) {
+      throw new UnauthorizedException({
+        error: 'None algorithm is not allowed'
+      });
+    }
 
     try {
       return !!(await this.authService.validateToken(token, processorType));
