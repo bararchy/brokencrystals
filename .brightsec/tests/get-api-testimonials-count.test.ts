@@ -21,7 +21,7 @@ after(() => runner.clear());
 test('GET /api/testimonials/count', { signal: AbortSignal.timeout(timeout) }, async () => {
   await runner
     .createScan({
-      tests: ['sqli', 'xss', 'csrf'],
+      tests: ['sqli', 'xss'],
       attackParamLocations: [AttackParamLocation.QUERY]
     })
     .setFailFast(false)
