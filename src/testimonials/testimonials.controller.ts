@@ -100,6 +100,8 @@ export class TestimonialsController {
   })
   async getCount(@Query('query') query: string): Promise<number> {
     this.logger.debug('Get count of testimonials.');
-    return await this.testimonialsService.count(query);
+    // Sanitize the query input to prevent XSS
+    const sanitizedQuery = query.replace(/<[^>]*>?/gm, '');
+    return await this.testimonialsService.count(sanitizedQuery);
   }
 }
