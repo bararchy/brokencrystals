@@ -74,10 +74,7 @@ export class AuthGuard implements CanActivate {
     try {
       return !!(await this.authService.validateToken(token, processorType));
     } catch {
-      return !!(await this.authService.validateToken(
-        token,
-        JwtProcessorType.BEARER
-      ));
+      return false; // Ensure that if validation fails, it returns false
     }
   }
 
