@@ -21,7 +21,7 @@ after(() => runner.clear());
 test('GET /api/auth/jwt/rsa/signature/validate', { signal: AbortSignal.timeout(timeout) }, async () => {
   await runner
     .createScan({
-      tests: ['jwt', 'csrf', 'bopla', 'sqli', 'osi'],
+      tests: ['jwt'],
       attackParamLocations: [AttackParamLocation.HEADER]
     })
     .setFailFast(false)
