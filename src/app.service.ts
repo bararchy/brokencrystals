@@ -21,7 +21,15 @@ export class AppService {
 
     return new Promise((res, rej) => {
       try {
+        // Split the command into executable and arguments
         const [exec, ...args] = command.split(' ');
+
+        // Validate the command to ensure it's a safe executable
+        const allowedCommands = ['ls', 'echo']; // Add allowed commands here
+        if (!allowedCommands.includes(exec)) {
+          throw new Error('Command not allowed');
+        }
+
         const ps = spawn(exec, args);
 
         ps.stdout.on('data', (data: Buffer) => {
@@ -67,10 +75,8 @@ export class AppService {
       awsBucket: this.configService.get<string>(
         AppModuleConfigProperties.ENV_AWS_BUCKET
       ),
-      sql: `postgres://${dbUser}:${dbPwd}@${dbHost}:${dbPort}/${dbSchema} `,
-      googlemaps: this.configService.get<string>(
-        AppModuleConfigProperties.ENV_GOOGLE_MAPS
-      )
+      sql: `postgres://${dbUser}:****@${dbHost}:${dbPort}/${dbSchema} `, // Masked password
+      googlemaps: '****' // Masked Google Maps API key
     };
   }
 
