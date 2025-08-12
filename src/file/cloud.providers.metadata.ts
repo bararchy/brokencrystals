@@ -251,6 +251,17 @@ export class CloudProvidersMetaData {
     );
   }
 
+  getAllowedPaths(hostname: string): string[] {
+    switch (hostname) {
+      case 'metadata.google.internal':
+        return ['/computeMetadata/v1/'];
+      case '169.254.169.254':
+        return ['/metadata/instance', '/metadata/v1', '/latest/meta-data'];
+      default:
+        return [];
+    }
+  }
+
   async get(providerUrl: string): Promise<string> {
     if (providerUrl.startsWith(CloudProvidersMetaData.GOOGLE)) {
       return this.providers.get(CloudProvidersMetaData.GOOGLE);
