@@ -108,7 +108,10 @@ export class ProductsController {
     if (limit && limit < 0) {
       throw new BadRequestException('Limit must be positive');
     }
-    const products = await this.productsService.findLatest(limit || 3);
+    // Enforce a maximum limit to prevent excessive data retrieval
+    const maxLimit = 50;
+    const effectiveLimit = Math.min(limit || 3, maxLimit);
+    const products = await this.productsService.findLatest(effectiveLimit);
     return products.map((p: Product) => new ProductDto(p));
   }
 
