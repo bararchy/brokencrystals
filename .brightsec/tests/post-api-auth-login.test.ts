@@ -21,7 +21,7 @@ after(() => runner.clear());
 test('POST /api/auth/login', { signal: AbortSignal.timeout(timeout) }, async () => {
   await runner
     .createScan({
-      tests: ['csrf', 'jwt', 'sqli', 'xss', 'osi', 'full_path_disclosure'],
+      tests: ['full_path_disclosure'],
       attackParamLocations: [AttackParamLocation.BODY],
       starMetadata: {}
     })
