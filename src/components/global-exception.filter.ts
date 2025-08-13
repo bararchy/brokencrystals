@@ -29,9 +29,15 @@ export class GlobalExceptionFilter extends BaseExceptionFilter implements Except
       const applicationRef =
         this.applicationRef || (this.httpAdapterHost && this.httpAdapterHost.httpAdapter);
 
+      // Modify the response to hide sensitive information
+      const safeResponse = typeof response === 'string' ? { error: response } : response;
+      if (safeResponse.location) {
+        delete safeResponse.location; // Remove location information
+      }
+
       return applicationRef.reply(
         host.getArgByIndex(1),
-        response,
+        safeResponse,
         status
       );
     }
