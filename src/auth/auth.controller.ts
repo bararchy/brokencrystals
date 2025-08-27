@@ -161,7 +161,23 @@ export class AuthController {
   @ApiOperation({
     description: SWAGGER_DESC_VALIDATE_WITH_RSA_SIGNATURE_JWT
   })
-  async validateWithRSASignatureJwt(): Promise<JwtValidationResponse> {
+  async validateWithRSASignatureJwt(@Req() request: FastifyRequest): Promise<JwtValidationResponse> {
+    const authHeader = request.headers['authorization'];
+    if (!authHeader) {
+      throw new UnauthorizedException('Authorization header is missing');
+    }
+
+    const token = authHeader.split(' ')[1];
+    if (!token) {
+      throw new UnauthorizedException('JWT token is missing');
+    }
+
+    try {
+      await this.authService.validateToken(token, JwtProcessorType.RSA_SIGNATURE);
+    } catch (error) {
+      throw new UnauthorizedException('Invalid JWT token');
+    }
+
     return {
       secret: 'this is our secret'
     };
