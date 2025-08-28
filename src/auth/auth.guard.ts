@@ -37,7 +37,7 @@ export class AuthGuard implements CanActivate {
       this.logger.debug(`Failed to validate token: ${err.message}`);
       throw new UnauthorizedException({
         error: 'Unauthorized',
-        line: __filename
+        line: 'Error occurred during token validation'
       });
     }
   }
