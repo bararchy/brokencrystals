@@ -7,7 +7,7 @@ import { JwtTokenProcessor as JwtTokenProcessor } from './jwt.token.processor';
 export class JwtTokenWithSqlKIDProcessor extends JwtTokenProcessor {
   private static readonly KID: number = 0;
   private static readonly KID_FETCH_QUERY = (key: string, param: string) =>
-    `select key from (select '${key}' as key, ${JwtTokenWithSqlKIDProcessor.KID} as id) as keys where keys.id = '${param}'`;
+    `select key from (select '${key}' as key, ${JwtTokenWithSqlKIDProcessor.KID} as id) as keys where keys.id = ?`;
 
   constructor(
     private readonly em: EntityManager,
@@ -28,7 +28,7 @@ export class JwtTokenWithSqlKIDProcessor extends JwtTokenProcessor {
     this.log.debug(`Executing key fetching query: ${query}`);
     const keyRow: { key: string } = await this.em
       .getConnection()
-      .execute(query, [], 'get');
+      .execute(query, [header.kid], 'get');
     this.log.debug(`Key is ${keyRow.key}`);
 
     return decode(token, keyRow.key, false, 'HS256');
