@@ -13,7 +13,11 @@ export class JwtTokenWithRSASignatureKeysProcessor extends JwtTokenProcessor {
   async validateToken(token: string): Promise<unknown> {
     this.log.debug('Call validateToken');
 
-    return decode(token, this.publicKey, true, 'RS256');
+    const decodedToken = decode(token, this.publicKey, true, 'RS256');
+    if (decodedToken && decodedToken['alg'] === 'none') {
+      throw new Error('Tokens with "none" algorithm are not allowed');
+    }
+    return decodedToken;
   }
 
   async createToken(payload: unknown): Promise<string> {
