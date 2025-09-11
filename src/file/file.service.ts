@@ -10,27 +10,50 @@ export class FileService {
   private readonly logger = new Logger(FileService.name);
   private cloudProviders = new CloudProvidersMetaData();
 
+  private isValidPath(filePath: string): boolean {
+    // Define a list of allowed directories
+    const allowedDirectories = [
+      path.resolve(process.cwd(), 'config/products/crystals'),
+      // Add more allowed directories as needed
+    ];
+
+    // Resolve the absolute path
+    const absolutePath = path.resolve(process.cwd(), filePath);
+
+    // Check if the resolved path starts with any of the allowed directories
+    return allowedDirectories.some(dir => absolutePath.startsWith(dir));
+  }
+
   async getFile(file: string): Promise<Stream> {
     this.logger.log(`Reading file: ${file}`);
 
-    if (file.startsWith('/')) {
-      await fs.promises.access(file, R_OK);
+    if (!this.isValidPath(file)) {
+      throw new Error('Access to this file path is not allowed');
+    }
 
-      return fs.createReadStream(file);
-    } else if (file.startsWith('http')) {
-      const content = await this.cloudProviders.get(file);
+    try {
+      if (file.startsWith('/')) {
+        await fs.promises.access(file, R_OK);
 
-      if (content) {
-        return Readable.from(content);
+        return fs.createReadStream(file);
+      } else if (file.startsWith('http')) {
+        const content = await this.cloudProviders.get(file);
+
+        if (content) {
+          return Readable.from(content);
+        } else {
+          throw new Error(`no such file or directory, access '${file}'`);
+        }
       } else {
-        throw new Error(`no such file or directory, access '${file}'`);
+        file = path.resolve(process.cwd(), file);
+
+        await fs.promises.access(file, R_OK);
+
+        return fs.createReadStream(file);
       }
-    } else {
-      file = path.resolve(process.cwd(), file);
-
-      await fs.promises.access(file, R_OK);
-
-      return fs.createReadStream(file);
+    } catch (err) {
+      this.logger.error(`Error accessing file: ${err.message}`);
+      throw new Error('File not found or inaccessible');
     }
   }
 
