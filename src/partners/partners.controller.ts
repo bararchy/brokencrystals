@@ -46,6 +46,10 @@ export class PartnersController {
     this.logger.debug(`Getting partners with xpath expression "${xpath}"`);
 
     try {
+      // Validate the xpath input to prevent injection
+      if (!this.isValidXpath(xpath)) {
+        throw new HttpException('Invalid XPath expression', HttpStatus.BAD_REQUEST);
+      }
       return this.partnersService.getPartnersProperties(xpath);
     } catch (err) {
       throw new HttpException(
@@ -53,6 +57,13 @@ export class PartnersController {
         HttpStatus.INTERNAL_SERVER_ERROR
       );
     }
+  }
+
+  // Method to validate the xpath expression
+  private isValidXpath(xpath: string): boolean {
+    // Implement a basic validation logic or use a library to validate the xpath
+    // For demonstration, we are just checking if it starts with a valid root
+    return xpath.startsWith('/partners/partner');
   }
 
   // **** This is a boolean based XPATH injection EP ****

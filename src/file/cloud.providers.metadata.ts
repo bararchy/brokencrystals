@@ -268,4 +268,15 @@ export class CloudProvidersMetaData {
       return data;
     }
   }
+
+  getAllowedPaths(hostname: string): string[] {
+    switch (hostname) {
+      case 'metadata.google.internal':
+        return ['/computeMetadata/v1/'];
+      case '169.254.169.254':
+        return ['/metadata/v1', '/latest/meta-data/'];
+      default:
+        return [];
+    }
+  }
 }
