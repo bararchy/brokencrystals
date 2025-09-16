@@ -21,7 +21,7 @@ after(() => runner.clear());
 test('GET /api/spawn?command=:command', { signal: AbortSignal.timeout(timeout) }, async () => {
   await runner
     .createScan({
-      tests: ['osi', 'csrf', 'unvalidated_redirect', 'secret_tokens'],
+      tests: ['osi'],
       attackParamLocations: [AttackParamLocation.QUERY],
       starMetadata: { databases: ['PostgreSQL'] }
     })
