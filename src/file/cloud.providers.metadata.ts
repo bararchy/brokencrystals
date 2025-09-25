@@ -277,8 +277,7 @@ export class CloudProvidersMetaData {
     }
 
     // Ensure the URL path is within the allowed paths for the provider
-    const providerKey = Object.values(CloudProvidersMetaData).find(key => providerUrl.startsWith(key));
-    const allowedPaths = this.providers.get(providerKey);
+    const allowedPaths = this.providers.get(providerUrl.split('/')[2]);
     if (!allowedPaths || !allowedPaths.includes(url.pathname)) {
       throw new Error('Access to the specified path is not allowed');
     }
