@@ -1,10 +1,4 @@
-import {
-  CanActivate,
-  Injectable,
-  Logger,
-  UnauthorizedException,
-  ExecutionContext
-} from '@nestjs/common';
+import { CanActivate, Injectable, Logger, UnauthorizedException, ExecutionContext } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
 import { AuthService, JwtProcessorType } from './auth.service';
 import { JwTypeMetadataField } from './jwt/jwt.type.decorator';
@@ -37,7 +31,8 @@ export class AuthGuard implements CanActivate {
       this.logger.debug(`Failed to validate token: ${err.message}`);
       throw new UnauthorizedException({
         error: 'Unauthorized',
-        line: __filename
+        // Removed line information to prevent full path disclosure
+        location: 'AuthGuard'
       });
     }
   }
