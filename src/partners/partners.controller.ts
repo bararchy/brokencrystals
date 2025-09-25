@@ -132,7 +132,9 @@ export class PartnersController {
     this.logger.debug(`Searching partner names by the keyword "${keyword}"`);
 
     try {
-      const xpath = `//partners/partner/name[contains(., '${keyword}')]`;
+      // Sanitize the keyword to prevent XPath Injection
+      const sanitizedKeyword = this.sanitizeInput(keyword);
+      const xpath = `//partners/partner/name[contains(., '${sanitizedKeyword}')]`;
       return this.partnersService.getPartnersProperties(xpath);
     } catch (err) {
       const errStr = err.toString();
@@ -158,5 +160,11 @@ export class PartnersController {
       /\btext\(\)\b/ // disallow text() function
     ];
     return !forbiddenPatterns.some(pattern => pattern.test(xpath));
+  }
+
+  private sanitizeInput(input: string): string {
+    // Basic sanitization logic for input
+    // This should be replaced with a more robust sanitization logic
+    return input.replace(/["'&<>]/g, '');
   }
 }
