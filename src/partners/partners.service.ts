@@ -71,7 +71,9 @@ export class PartnersService {
   }
 
   getPartnersProperties(xpathExpression: string): string {
-    let xmlNodes = this.selectPartnerPropertiesByXPATH(xpathExpression);
+    // Sanitize the input to prevent XPath Injection
+    const sanitizedXpathExpression = this.sanitizeXpath(xpathExpression);
+    let xmlNodes = this.selectPartnerPropertiesByXPATH(sanitizedXpathExpression);
 
     if (!Array.isArray(xmlNodes)) {
       this.logger.debug(
@@ -83,5 +85,19 @@ export class PartnersService {
     }
 
     return this.getFormattedXMLOutput(xmlNodes);
+  }
+
+  private sanitizeXpath(xpathExpression: string): string {
+    // Basic sanitization logic for XPath
+    // This should be replaced with a more robust sanitization logic
+    const forbiddenPatterns = [
+      /\|/, // disallow union
+      /\[\s*\]/, // disallow empty predicates
+      /\btext\(\)\b/ // disallow text() function
+    ];
+    if (forbiddenPatterns.some(pattern => pattern.test(xpathExpression))) {
+      throw new Error('Invalid XPath expression');
+    }
+    return xpathExpression;
   }
 }
