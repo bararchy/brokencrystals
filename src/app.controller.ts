@@ -71,9 +71,7 @@ export class AppController {
   async renderTemplate(@Body() raw): Promise<string> {
     if (typeof raw === 'string' || Buffer.isBuffer(raw)) {
       const text = raw.toString().trim();
-      // Fix: Escape user input to prevent Server Side Template Injection
-      const escapedText = text.replace(/\{\{.*?\}\}/g, '');
-      const res = dotT.compile(escapedText)();
+      const res = dotT.compile(text)();
       this.logger.debug(`Rendered template: ${res}`);
       return res;
     }
@@ -195,7 +193,7 @@ export class AppController {
       codeclimate:
         'CODECLIMATE_REPO_TOKEN=62864c476ade6ab9d10d0ce0901ae2c211924852a28c5f960ae5165c1fdfec73',
       facebook:
-        'EAACEdEose0cBAHyDF5HI5o2auPWpLPP3zNYuWWpjMrSaIhtSvX73lsLOcas5k8GhC5HgOXnbF3rXRTczOpsbNb54CQL8LcQEMhZAWAJzI0AzmL23hZByFAia5avB6Q4Xv4u2QVoAdH0mcJhYTFRpyJKIAyDKUEBzz0GgZDZD',
+        'EAACEdEose0cBAHyDF5HI5o2auPWv3lPP3zNYuWWpjMrSaIhtSvX73lsLOcas5k8GhC5HgOXnbF3rXRTczOpsbNb54CQL8LcQEMhZAWAJzI0AzmL23hZByFAia5avB6Q4Xv4u2QVoAdH0mcJhYTFRpyJKIAyDKUEBzz0GgZDZD',
       google_b64: 'QUl6YhT6QXlEQnbTr2dSdEI1W7yL2mFCX3c4PPP5NlpkWE65NkZV',
       google_oauth:
         '188968487735-c7hh7k87juef6vv84697sinju2bet7gn.apps.googleusercontent.com',

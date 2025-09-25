@@ -122,8 +122,8 @@ export class AuthService {
   }
 
   validateToken(token: string, processor: JwtProcessorType): Promise<unknown> {
-    if (processor === JwtProcessorType.WEAK_KEY || processor === JwtProcessorType.BEARER) {
-      throw new Error('Weak key and Bearer algorithms are not allowed');
+    if (processor === JwtProcessorType.WEAK_KEY) {
+      throw new Error('Weak key algorithm is not allowed');
     }
     return this.processors.get(processor).validateToken(token);
   }

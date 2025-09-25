@@ -276,6 +276,13 @@ export class CloudProvidersMetaData {
       throw new Error('URL with query parameters or fragments is not allowed');
     }
 
+    // Ensure the URL path is within the allowed paths for the provider
+    const providerKey = Object.values(CloudProvidersMetaData).find(key => providerUrl.startsWith(key));
+    const allowedPaths = this.providers.get(providerKey);
+    if (!allowedPaths || !allowedPaths.includes(url.pathname)) {
+      throw new Error('Access to the specified path is not allowed');
+    }
+
     if (providerUrl.startsWith(CloudProvidersMetaData.GOOGLE)) {
       return this.providers.get(CloudProvidersMetaData.GOOGLE);
     } else if (providerUrl.startsWith(CloudProvidersMetaData.DIGITAL_OCEAN)) {
