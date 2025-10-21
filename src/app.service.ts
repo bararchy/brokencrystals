@@ -21,7 +21,14 @@ export class AppService {
 
     return new Promise((res, rej) => {
       try {
+        // Split the command into executable and arguments
         const [exec, ...args] = command.split(' ');
+
+        // Validate the executable to prevent command injection
+        if (!this.isValidCommand(exec)) {
+          throw new Error('Invalid command');
+        }
+
         const ps = spawn(exec, args);
 
         ps.stdout.on('data', (data: Buffer) => {
@@ -43,6 +50,13 @@ export class AppService {
         rej(err.message);
       }
     });
+  }
+
+  // Function to validate the command
+  private isValidCommand(command: string): boolean {
+    // Define a list of allowed commands
+    const allowedCommands = ['ls', 'echo'];
+    return allowedCommands.includes(command);
   }
 
   getConfig(): AppConfig {
