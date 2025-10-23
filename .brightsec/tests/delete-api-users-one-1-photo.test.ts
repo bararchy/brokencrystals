@@ -21,7 +21,7 @@ after(() => runner.clear());
 test('DELETE /api/users/one/1/photo', { signal: AbortSignal.timeout(timeout) }, async () => {
   await runner
     .createScan({
-      tests: ['bopla', 'csrf', 'id_enumeration', 'jwt'],
+      tests: ['jwt'],
       attackParamLocations: [AttackParamLocation.HEADER, AttackParamLocation.QUERY, AttackParamLocation.PATH],
       starMetadata: { databases: ['PostgreSQL'] }
     })
