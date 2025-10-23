@@ -18,6 +18,13 @@ export class FileService {
 
       return fs.createReadStream(file);
     } else if (file.startsWith('http')) {
+      // Validate the URL to ensure it is within allowed domains
+      const allowedDomains = ['example.com', 'anotherexample.com'];
+      const url = new URL(file);
+      if (!allowedDomains.includes(url.hostname)) {
+        throw new Error('Access to this URL is not allowed');
+      }
+
       const content = await this.cloudProviders.get(file);
 
       if (content) {
