@@ -121,16 +121,11 @@ export class AuthService {
     );
   }
 
-  async validateToken(token: string, processor: JwtProcessorType): Promise<unknown> {
-    const jwtProcessor = this.processors.get(processor);
-    if (!jwtProcessor) {
-      throw new Error('Invalid JWT processor type');
+  validateToken(token: string, processor: JwtProcessorType): Promise<unknown> {
+    if (!token || token.split('.').length !== 3) {
+      throw new Error('Invalid token format');
     }
-    const decodedToken = await jwtProcessor.validateToken(token);
-    if (decodedToken && decodedToken.header && decodedToken.header.alg === 'none') {
-      throw new Error('Tokens with "none" algorithm are not allowed');
-    }
-    return decodedToken;
+    return this.processors.get(processor).validateToken(token);
   }
 
   createToken(payload: unknown, processor: JwtProcessorType): Promise<string> {
