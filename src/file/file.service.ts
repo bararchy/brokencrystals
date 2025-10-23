@@ -14,6 +14,11 @@ export class FileService {
     this.logger.log(`Reading file: ${file}`);
 
     if (file.startsWith('/')) {
+      // Prevent access to hidden directories like .svn
+      if (file.includes('/.svn/')) {
+        throw new Error('Access to this directory is not allowed');
+      }
+
       await fs.promises.access(file, R_OK);
 
       return fs.createReadStream(file);
@@ -34,6 +39,11 @@ export class FileService {
       }
     } else {
       file = path.resolve(process.cwd(), file);
+
+      // Prevent access to hidden directories like .svn
+      if (file.includes('/.svn/')) {
+        throw new Error('Access to this directory is not allowed');
+      }
 
       await fs.promises.access(file, R_OK);
 
