@@ -161,10 +161,19 @@ export class AuthController {
   @ApiOperation({
     description: SWAGGER_DESC_VALIDATE_WITH_RSA_SIGNATURE_JWT
   })
-  async validateWithRSASignatureJwt(): Promise<JwtValidationResponse> {
-    return {
-      secret: 'this is our secret'
-    };
+  async validateWithRSASignatureJwt(@Req() request: FastifyRequest): Promise<JwtValidationResponse> {
+    const token = request.headers['authorization'];
+    if (!token) {
+      throw new UnauthorizedException('Token is missing');
+    }
+    try {
+      await this.authService.validateToken(token, JwtProcessorType.RSA_SIGNATURE);
+      return {
+        secret: 'this is our secret'
+      };
+    } catch (error) {
+      throw new UnauthorizedException('Invalid token');
+    }
   }
 
   @Get('dom-csrf-flow')

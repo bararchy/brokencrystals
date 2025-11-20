@@ -135,10 +135,16 @@ export class UsersController {
       }
     }
   })
-  async getById(@Param('id') id: number): Promise<UserDto> {
+  @UseGuards(AuthGuard)
+  @JwtType(JwtProcessorType.RSA)
+  async getById(@Param('id') id: number, @Req() req: FastifyRequest): Promise<UserDto> {
     try {
       this.logger.debug(`Find a user by id: ${id}`);
-      return new UserDto(await this.usersService.findById(id));
+      const user = await this.usersService.findById(id);
+      if (this.originEmail(req) !== user.email) {
+        throw new ForbiddenException();
+      }
+      return new UserDto(user);
     } catch (err) {
       throw new HttpException(err.message, err.status);
     }
@@ -216,10 +222,7 @@ export class UsersController {
     this.logger.debug(`Find a user photo by email: ${email}`);
     const user = await this.usersService.findByEmail(email);
     if (!user) {
-      throw new NotFoundException({
-        error: 'Could not file user',
-        location: __filename
-      });
+      throw new NotFoundException('Could not find user'); // Removed sensitive path information
     }
 
     if (!user.photo) {
@@ -230,10 +233,7 @@ export class UsersController {
     try {
       return user.photo;
     } catch (err) {
-      throw new InternalServerErrorException({
-        error: err.message,
-        location: __filename
-      });
+      throw new InternalServerErrorException('An error occurred while retrieving the photo.'); // Generalized error message
     }
   }
 
@@ -269,10 +269,7 @@ export class UsersController {
 
     const user = await this.usersService.findById(id);
     if (!user) {
-      throw new NotFoundException({
-        error: 'Could not file user',
-        location: __filename
-      });
+      throw new NotFoundException('Could not find user'); // Removed sensitive path information
     }
 
     await this.usersService.deletePhoto(id);
@@ -309,10 +306,7 @@ export class UsersController {
         }
       }
     } catch (err) {
-      throw new InternalServerErrorException({
-        error: err.message,
-        location: __filename
-      });
+      throw new InternalServerErrorException('An error occurred while processing the LDAP query.'); // Generalized error message
     }
 
     if (!users) {
@@ -463,8 +457,7 @@ export class UsersController {
       type: 'object',
       properties: {
         statusCode: { type: 'number' },
-        message: { type: 'string' },
-        error: { type: 'string' }
+        message: { type: 'string' }
       }
     }
   })
@@ -551,10 +544,7 @@ export class UsersController {
         await this.usersService.updatePhoto(email, file_buffer);
       }
     } catch (err) {
-      throw new InternalServerErrorException({
-        error: err.message,
-        location: __filename
-      });
+      throw new InternalServerErrorException('An error occurred while uploading the file.'); // Generalized error message
     }
   }
 
