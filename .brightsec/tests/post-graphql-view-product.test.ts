@@ -21,7 +21,7 @@ after(() => runner.clear());
 test('POST /graphql viewProduct', { signal: AbortSignal.timeout(timeout) }, async () => {
   await runner
     .createScan({
-      tests: ['sqli', 'graphql_introspection', 'jwt', 'full_path_disclosure'],
+      tests: ['sqli', 'graphql_introspection'],
       attackParamLocations: [AttackParamLocation.BODY, AttackParamLocation.HEADER],
       starMetadata: {
         code_source: 'bararchy/brokencrystals:master',

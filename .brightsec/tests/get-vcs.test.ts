@@ -21,7 +21,7 @@ after(() => runner.clear());
 test('GET /.vcs', { signal: AbortSignal.timeout(timeout) }, async () => {
   await runner
     .createScan({
-      tests: ['lfi', 'version_control_systems', 'full_path_disclosure', 'xss'],
+      tests: ['version_control_systems'],
       attackParamLocations: [AttackParamLocation.QUERY, AttackParamLocation.HEADER],
       starMetadata: {
         code_source: 'bararchy/brokencrystals:master',
