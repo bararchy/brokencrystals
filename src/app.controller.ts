@@ -87,7 +87,16 @@ export class AppController {
   })
   @Redirect()
   async redirect(@Query('url') url: string) {
-    return { url };
+    const allowedDomains = ['example.com', 'google.com']; // Define allowed domains
+    try {
+      const urlObj = new URL(url);
+      if (!allowedDomains.includes(urlObj.hostname)) {
+        throw new HttpException('Invalid redirect URL', HttpStatus.BAD_REQUEST);
+      }
+      return { url };
+    } catch (error) {
+      throw new HttpException('Invalid URL format', HttpStatus.BAD_REQUEST);
+    }
   }
 
   @Post('metadata')
@@ -152,10 +161,8 @@ export class AppController {
     try {
       return await this.appService.launchCommand(command);
     } catch (err) {
-      throw new InternalServerErrorException({
-        error: err.message || err,
-        location: __filename
-      });
+      this.logger.error(`Error executing command: ${err.message || err}`);
+      throw new InternalServerErrorException('An error occurred while executing the command.');
     }
   }
 
