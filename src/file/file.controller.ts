@@ -298,6 +298,10 @@ export class FileController {
   ): Promise<string> {
     try {
       if (typeof raw === 'string' || Buffer.isBuffer(raw)) {
+        // Validate the file path to prevent SSRF
+        if (!file.startsWith('/allowed/path/')) {
+          throw new BadRequestException(`Invalid file path: ${file}`);
+        }
         await fs.promises.access(path.dirname(file), W_OK);
         await fs.promises.writeFile(file, raw);
         return `File uploaded successfully at ${file}`;
