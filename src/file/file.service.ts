@@ -41,14 +41,8 @@ export class FileService {
   async getFile(file: string): Promise<Stream> {
     this.logger.log(`Reading file: ${file}`);
 
-    if (!this.isValidPath(file) && !this.isValidUrl(file)) {
-      throw new Error('Access to this file path or URL is not allowed');
-    }
-
-    if (this.isValidUrl(file)) {
-      // Handle URL fetching logic here
-      // For example, using axios or another HTTP client to fetch the file
-      throw new Error('URL fetching is not implemented');
+    if (!this.isValidPath(file)) {
+      throw new Error('Access to this file path is not allowed');
     }
 
     const resolvedPath = path.resolve(process.cwd(), 'allowed_files', file);
