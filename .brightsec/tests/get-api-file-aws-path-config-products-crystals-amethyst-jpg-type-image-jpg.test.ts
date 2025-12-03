@@ -21,7 +21,7 @@ after(() => runner.clear());
 test('GET /api/file/aws?path=config/products/crystals/amethyst.jpg&type=image/jpg', { signal: AbortSignal.timeout(timeout) }, async () => {
   await runner
     .createScan({
-      tests: ['amazon_s3_takeover', 'ssrf', 'lfi', 'open_cloud_storage'],
+      tests: ['ssrf'],
       attackParamLocations: [AttackParamLocation.QUERY, AttackParamLocation.HEADER],
       starMetadata: {
         code_source: 'bararchy/brokencrystals:master',

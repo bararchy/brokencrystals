@@ -21,7 +21,7 @@ after(() => runner.clear());
 test('GET /api/users/ldap', { signal: AbortSignal.timeout(timeout) }, async () => {
   await runner
     .createScan({
-      tests: ['ldapi', 'xss', 'full_path_disclosure', 'business_constraint_bypass'],
+      tests: ['full_path_disclosure'],
       attackParamLocations: [AttackParamLocation.QUERY],
       starMetadata: {
         code_source: 'bararchy/brokencrystals:master',

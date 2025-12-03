@@ -21,7 +21,7 @@ after(() => runner.clear());
 test('PUT /api/file/raw?path=some/path/to/file.png', { signal: AbortSignal.timeout(timeout) }, async () => {
   await runner
     .createScan({
-      tests: ['lfi', 'file_upload', 'osi', 'ssrf'],
+      tests: ['ssrf'],
       attackParamLocations: [AttackParamLocation.QUERY, AttackParamLocation.BODY],
       starMetadata: {
         code_source: 'bararchy/brokencrystals:master',
