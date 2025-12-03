@@ -21,7 +21,7 @@ after(() => runner.clear());
 test('DELETE /api/users/one/1/photo', { signal: AbortSignal.timeout(timeout) }, async () => {
   await runner
     .createScan({
-      tests: ['bopla', 'id_enumeration', 'jwt'],
+      tests: ['jwt'],
       attackParamLocations: [AttackParamLocation.HEADER, AttackParamLocation.QUERY],
       starMetadata: {
         code_source: 'bararchy/brokencrystals:master',

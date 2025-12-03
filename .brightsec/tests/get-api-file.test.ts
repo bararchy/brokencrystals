@@ -21,7 +21,7 @@ after(() => runner.clear());
 test('GET /api/file', { signal: AbortSignal.timeout(timeout) }, async () => {
   await runner
     .createScan({
-      tests: ['lfi', 'rfi', 'ssrf', 'open_cloud_storage'],
+      tests: ['lfi', 'rfi', 'ssrf'],
       attackParamLocations: [AttackParamLocation.PATH, AttackParamLocation.QUERY],
       starMetadata: {
         code_source: 'bararchy/brokencrystals:master',

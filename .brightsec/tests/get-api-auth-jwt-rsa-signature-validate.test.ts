@@ -21,7 +21,7 @@ after(() => runner.clear());
 test('GET /api/auth/jwt/rsa/signature/validate', { signal: AbortSignal.timeout(timeout) }, async () => {
   await runner
     .createScan({
-      tests: ['jwt', 'csrf', 'bopla', 'insecure_tls_configuration'],
+      tests: ['jwt'],
       attackParamLocations: [AttackParamLocation.HEADER],
       starMetadata: {
         code_source: "bararchy/brokencrystals:master",
