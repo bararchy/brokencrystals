@@ -1,5 +1,5 @@
 import { Logger } from '@nestjs/common';
-import { TokenExpiredError } from 'jsonwebtoken';
+import { TokenExpiredError, verify } from 'jsonwebtoken';
 import { encode } from 'jwt-simple';
 import { JwtTokenProcessor as JwtTokenProcessor } from './jwt.token.processor';
 import { KeyCloakService } from '../../keycloak/keycloak.service';
@@ -28,6 +28,12 @@ export class JwtBearerTokenProcessor extends JwtTokenProcessor {
       throw new Error(
         'Authorization header contains an invalid JWT token: KID is missing.'
       );
+    }
+
+    // Ensure the token is not using the 'none' algorithm
+    if (header.alg === 'none') {
+      this.log.debug('Invalid JWT token. Algorithm cannot be none.');
+      throw new Error('Authorization header contains an invalid JWT token: Algorithm cannot be none.');
     }
 
     await this.decodeAndVerifyToken(token, header.kid);

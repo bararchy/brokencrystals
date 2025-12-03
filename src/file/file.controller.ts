@@ -50,7 +50,7 @@ export class FileController {
 
   private async loadCPFile(cpBaseUrl: string, path: string) {
     if (!path.startsWith(cpBaseUrl)) {
-      throw new BadRequestException(`Invalid paramater 'path' ${path}`);
+      throw new BadRequestException(`Invalid parameter 'path' ${path}`);
     }
 
     const file: Stream = await this.fileService.getFile(path);
@@ -86,6 +86,9 @@ export class FileController {
     @Query('type') contentType: string,
     @Res({ passthrough: true }) res: FastifyReply
   ) {
+    if (!this.fileService.isValidPath(path)) {
+      throw new BadRequestException('Invalid file path');
+    }
     const file: Stream = await this.fileService.getFile(path);
     const type = this.getContentType(contentType);
     res.type(type);
@@ -159,6 +162,9 @@ export class FileController {
     @Query('type') contentType: string,
     @Res({ passthrough: true }) res: FastifyReply
   ) {
+    if (!this.isValidAwsPath(path)) {
+      throw new BadRequestException('Invalid path for AWS metadata');
+    }
     const file: Stream = await this.loadCPFile(
       CloudProvidersMetaData.AWS,
       path
@@ -197,6 +203,9 @@ export class FileController {
     @Query('type') contentType: string,
     @Res({ passthrough: true }) res: FastifyReply
   ) {
+    if (!this.isValidAzurePath(path)) {
+      throw new BadRequestException('Invalid path for Azure metadata');
+    }
     const file: Stream = await this.loadCPFile(
       CloudProvidersMetaData.AZURE,
       path
@@ -205,6 +214,24 @@ export class FileController {
     res.type(type);
 
     return file;
+  }
+
+  private isValidAzurePath(path: string): boolean {
+    const allowedPaths = [
+      '/metadata/instance',
+      '/metadata/instance/compute',
+      '/metadata/instance/network'
+    ];
+    return allowedPaths.some(allowedPath => path.startsWith(allowedPath));
+  }
+
+  private isValidAwsPath(path: string): boolean {
+    const allowedPaths = [
+      '/ami-id',
+      '/instance-id',
+      '/instance-type'
+    ];
+    return allowedPaths.some(allowedPath => path.startsWith(allowedPath));
   }
 
   @Get('/digital_ocean')
@@ -235,6 +262,9 @@ export class FileController {
     @Query('type') contentType: string,
     @Res({ passthrough: true }) res: FastifyReply
   ) {
+    if (!this.isValidDigitalOceanPath(path)) {
+      throw new BadRequestException('Invalid path for Digital Ocean metadata');
+    }
     const file: Stream = await this.loadCPFile(
       CloudProvidersMetaData.DIGITAL_OCEAN,
       path
@@ -243,6 +273,15 @@ export class FileController {
     res.type(type);
 
     return file;
+  }
+
+  private isValidDigitalOceanPath(path: string): boolean {
+    const allowedPaths = [
+      '/metadata/v1/id',
+      '/metadata/v1/hostname',
+      '/metadata/v1/user-data'
+    ];
+    return allowedPaths.some(allowedPath => path.startsWith(allowedPath));
   }
 
   @Delete()
@@ -285,6 +324,9 @@ export class FileController {
     @Body() raw: string
   ): Promise<string> {
     try {
+      if (!this.isValidUploadPath(file)) {
+        throw new BadRequestException('Invalid file path');
+      }
       if (typeof raw === 'string' || Buffer.isBuffer(raw)) {
         await fs.promises.access(path.dirname(file), W_OK);
         await fs.promises.writeFile(file, raw);
@@ -294,6 +336,12 @@ export class FileController {
       this.logger.error(err.message);
       throw err.message;
     }
+  }
+
+  private isValidUploadPath(filePath: string): boolean {
+    const allowedExtensions = ['.png', '.jpg', '.jpeg', '.txt'];
+    const fileExtension = path.extname(filePath).toLowerCase();
+    return allowedExtensions.includes(fileExtension);
   }
 
   @Get('raw')
