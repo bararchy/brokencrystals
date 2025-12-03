@@ -4,6 +4,7 @@ import * as fs from 'fs';
 import * as path from 'path';
 import { CloudProvidersMetaData } from './cloud.providers.metadata';
 import { R_OK } from 'constants';
+import { URL } from 'url';
 
 @Injectable()
 export class FileService {
@@ -18,6 +19,18 @@ export class FileService {
 
       return fs.createReadStream(file);
     } else if (file.startsWith('http')) {
+      // Validate URL
+      const url = new URL(file);
+      if (!['https:', 'http:'].includes(url.protocol)) {
+        throw new Error('Invalid URL protocol');
+      }
+
+      // Allow only specific domains
+      const allowedDomains = ['example.com', 'another-allowed-domain.com'];
+      if (!allowedDomains.includes(url.hostname)) {
+        throw new Error('Domain not allowed');
+      }
+
       const content = await this.cloudProviders.get(file);
 
       if (content) {
@@ -35,8 +48,9 @@ export class FileService {
   }
 
   async deleteFile(file: string): Promise<boolean> {
-    if (file.startsWith('/')) {
-      throw new Error('cannot delete file from this location');
+    // Validate file path to prevent LFI
+    if (file.startsWith('/') || file.includes('..') || file.includes('file:')) {
+      throw new Error('Invalid file path');
     } else if (file.startsWith('http')) {
       throw new Error('cannot delete file from this location');
     } else {

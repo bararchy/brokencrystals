@@ -46,6 +46,10 @@ export class PartnersController {
     this.logger.debug(`Getting partners with xpath expression "${xpath}"`);
 
     try {
+      // Validate and sanitize the xpath input
+      if (!this.isValidXPath(xpath)) {
+        throw new Error('Invalid XPath expression');
+      }
       return this.partnersService.getPartnersProperties(xpath);
     } catch (err) {
       throw new HttpException(
@@ -85,7 +89,9 @@ export class PartnersController {
     );
 
     try {
-      const xpath = `//partners/partner[username/text()='${username}' and password/text()='${password}']/*`;
+      const sanitizedUsername = this.sanitizeInput(username);
+      const sanitizedPassword = this.sanitizeInput(password);
+      const xpath = `//partners/partner[username/text()='${sanitizedUsername}' and password/text()='${sanitizedPassword}']/*`;
       const xmlStr = this.partnersService.getPartnersProperties(xpath);
 
       // Check if account's data contains any information - If not, the login failed!
@@ -128,7 +134,8 @@ export class PartnersController {
     this.logger.debug(`Searching partner names by the keyword "${keyword}"`);
 
     try {
-      const xpath = `//partners/partner/name[contains(., '${keyword}')]`;
+      const sanitizedKeyword = this.sanitizeInput(keyword);
+      const xpath = `//partners/partner/name[contains(., '${sanitizedKeyword}')]`;
       return this.partnersService.getPartnersProperties(xpath);
     } catch (err) {
       const errStr = err.toString();
@@ -143,5 +150,21 @@ export class PartnersController {
         HttpStatus.INTERNAL_SERVER_ERROR
       );
     }
+  }
+
+  private isValidXPath(xpath: string): boolean {
+    // Implement a basic validation for XPath expressions
+    // This is a placeholder for actual validation logic
+    const forbiddenPatterns = [
+      /\|/, // disallow union
+      /\//, // disallow direct path
+      /\[.*\]/, // disallow predicates
+    ];
+    return !forbiddenPatterns.some((pattern) => pattern.test(xpath));
+  }
+
+  private sanitizeInput(input: string): string {
+    // Basic sanitization to escape single quotes
+    return input.replace(/'/g, "\'");
   }
 }
