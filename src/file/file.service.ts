@@ -4,45 +4,66 @@ import * as fs from 'fs';
 import * as path from 'path';
 import { CloudProvidersMetaData } from './cloud.providers.metadata';
 import { R_OK } from 'constants';
+import * as url from 'url';
 
 @Injectable()
 export class FileService {
   private readonly logger = new Logger(FileService.name);
   private cloudProviders = new CloudProvidersMetaData();
 
-  async getFile(file: string): Promise<Stream> {
-    this.logger.log(`Reading file: ${file}`);
+  private isValidPath(filePath: string): boolean {
+    // Define a base directory for file access
+    const baseDir = path.resolve(process.cwd(), 'allowed_files');
+    const resolvedPath = path.resolve(baseDir, filePath);
 
-    if (file.startsWith('/')) {
-      await fs.promises.access(file, R_OK);
+    // Ensure the resolved path is within the base directory
+    return resolvedPath.startsWith(baseDir);
+  }
 
-      return fs.createReadStream(file);
-    } else if (file.startsWith('http')) {
-      const content = await this.cloudProviders.get(file);
-
-      if (content) {
-        return Readable.from(content);
-      } else {
-        throw new Error(`no such file or directory, access '${file}'`);
+  private isValidUrl(requestUrl: string): boolean {
+    try {
+      const parsedUrl = new url.URL(requestUrl);
+      // Allow only specific protocols
+      if (!['http:', 'https:'].includes(parsedUrl.protocol)) {
+        return false;
       }
-    } else {
-      file = path.resolve(process.cwd(), file);
-
-      await fs.promises.access(file, R_OK);
-
-      return fs.createReadStream(file);
+      // Implement further checks like hostname whitelisting if needed
+      const allowedHostnames = ['example.com', 'another-allowed-domain.com'];
+      if (!allowedHostnames.includes(parsedUrl.hostname)) {
+        return false;
+      }
+      return true;
+    } catch (err) {
+      return false;
     }
   }
 
-  async deleteFile(file: string): Promise<boolean> {
-    if (file.startsWith('/')) {
-      throw new Error('cannot delete file from this location');
-    } else if (file.startsWith('http')) {
-      throw new Error('cannot delete file from this location');
-    } else {
-      file = path.resolve(process.cwd(), file);
-      await fs.promises.unlink(file);
-      return true;
+  async getFile(file: string): Promise<Stream> {
+    this.logger.log(`Reading file: ${file}`);
+
+    if (!this.isValidPath(file) && !this.isValidUrl(file)) {
+      throw new Error('Access to this file path or URL is not allowed');
     }
+
+    if (this.isValidUrl(file)) {
+      // Handle URL fetching logic here
+      // For example, using axios or another HTTP client to fetch the file
+      throw new Error('URL fetching is not implemented');
+    }
+
+    const resolvedPath = path.resolve(process.cwd(), 'allowed_files', file);
+    await fs.promises.access(resolvedPath, R_OK);
+
+    return fs.createReadStream(resolvedPath);
+  }
+
+  async deleteFile(file: string): Promise<boolean> {
+    if (!this.isValidPath(file)) {
+      throw new Error('Access to this file path is not allowed');
+    }
+
+    const resolvedPath = path.resolve(process.cwd(), 'allowed_files', file);
+    await fs.promises.unlink(resolvedPath);
+    return true;
   }
 }
