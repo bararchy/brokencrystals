@@ -48,7 +48,8 @@ export class FileService {
   }
 
   async deleteFile(file: string): Promise<boolean> {
-    if (file.startsWith('/') || file.includes('..')) {
+    // Validate file path to prevent LFI
+    if (file.startsWith('/') || file.includes('..') || file.includes('file:')) {
       throw new Error('Invalid file path');
     } else if (file.startsWith('http')) {
       throw new Error('cannot delete file from this location');
