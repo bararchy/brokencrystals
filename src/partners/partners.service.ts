@@ -63,6 +63,10 @@ export class PartnersService {
     xpathExpression: string
   ): SelectReturnType {
     const partnersXMLObj = this.getPartnersXMLObj();
+    // Validate the XPath expression to prevent injection
+    if (!this.isValidXPath(xpathExpression)) {
+      throw new Error('Invalid XPath expression');
+    }
     return xpath.select(xpathExpression, partnersXMLObj);
   }
 
@@ -83,5 +87,12 @@ export class PartnersService {
     }
 
     return this.getFormattedXMLOutput(xmlNodes);
+  }
+
+  // Method to validate the XPath expression
+  private isValidXPath(xpath: string): boolean {
+    // Basic validation logic to ensure the xpath does not contain disallowed characters
+    const disallowedPatterns = /['"\[\]|]/;
+    return !disallowedPatterns.test(xpath);
   }
 }

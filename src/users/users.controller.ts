@@ -218,7 +218,7 @@ export class UsersController {
     if (!user) {
       throw new NotFoundException({
         error: 'Could not file user',
-        location: __filename
+        location: 'users.controller.ts'
       });
     }
 
@@ -232,7 +232,7 @@ export class UsersController {
     } catch (err) {
       throw new InternalServerErrorException({
         error: err.message,
-        location: __filename
+        location: 'users.controller.ts'
       });
     }
   }
@@ -271,7 +271,7 @@ export class UsersController {
     if (!user) {
       throw new NotFoundException({
         error: 'Could not file user',
-        location: __filename
+        location: 'users.controller.ts'
       });
     }
 
@@ -309,10 +309,7 @@ export class UsersController {
         }
       }
     } catch (err) {
-      throw new InternalServerErrorException({
-        error: err.message,
-        location: __filename
-      });
+      throw new InternalServerErrorException('An error occurred while processing the LDAP query.');
     }
 
     if (!users) {
@@ -463,8 +460,7 @@ export class UsersController {
       type: 'object',
       properties: {
         statusCode: { type: 'number' },
-        message: { type: 'string' },
-        error: { type: 'string' }
+        message: { type: 'string' }
       }
     }
   })
@@ -553,7 +549,7 @@ export class UsersController {
     } catch (err) {
       throw new InternalServerErrorException({
         error: err.message,
-        location: __filename
+        location: 'users.controller.ts'
       });
     }
   }
