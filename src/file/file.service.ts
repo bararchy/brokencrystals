@@ -25,12 +25,15 @@ export class FileService {
   }
 
   async deleteFile(file: string): Promise<boolean> {
+    this.logger.log(`Deleting file: ${file}`);
+
+    // Validate the file path to prevent directory traversal
     if (file.includes('..') || path.isAbsolute(file)) {
       throw new Error('Invalid file path');
     }
-    
-    file = path.resolve(process.cwd(), file);
-    await fs.promises.unlink(file);
+
+    const resolvedPath = path.resolve(process.cwd(), file);
+    await fs.promises.unlink(resolvedPath);
     return true;
   }
 }

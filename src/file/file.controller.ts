@@ -126,9 +126,6 @@ export class FileController {
     @Query('type') contentType: string,
     @Res({ passthrough: true }) res: FastifyReply
   ) {
-    if (!path.startsWith(CloudProvidersMetaData.GOOGLE)) {
-      throw new BadRequestException(`Invalid parameter 'path' ${path}`);
-    }
     const file: Stream = await this.loadCPFile(
       CloudProvidersMetaData.GOOGLE,
       path
@@ -299,9 +296,6 @@ export class FileController {
     @Body() raw: string
   ): Promise<string> {
     try {
-      if (!this.isValidPath(file)) {
-        throw new BadRequestException(`Invalid file path: ${file}`);
-      }
       if (typeof raw === 'string' || Buffer.isBuffer(raw)) {
         await fs.promises.access(path.dirname(file), W_OK);
         await fs.promises.writeFile(file, raw);
@@ -311,12 +305,6 @@ export class FileController {
       this.logger.error(err.message);
       throw new Error('An error occurred while uploading the file.');
     }
-  }
-
-  private isValidPath(filePath: string): boolean {
-    // Implement a whitelist of allowed directories or patterns
-    const allowedPaths = ['/allowed/directory1', '/allowed/directory2'];
-    return allowedPaths.some(allowedPath => filePath.startsWith(allowedPath));
   }
 
   @Get('raw')
