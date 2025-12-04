@@ -10,11 +10,17 @@ export class FileService {
   private readonly logger = new Logger(FileService.name);
   private cloudProviders = new CloudProvidersMetaData();
 
+  private isValidPath(file: string): boolean {
+    // Allowlist of valid directories
+    const validDirectories = ['uploads', 'config/products/crystals'];
+    return validDirectories.some(dir => file.startsWith(dir));
+  }
+
   async getFile(file: string): Promise<Stream> {
     this.logger.log(`Reading file: ${file}`);
 
     // Validate the file path to prevent directory traversal
-    if (file.includes('..') || path.isAbsolute(file)) {
+    if (!this.isValidPath(file) || file.includes('..') || path.isAbsolute(file)) {
       throw new Error('Invalid file path');
     }
 
@@ -28,7 +34,7 @@ export class FileService {
     this.logger.log(`Deleting file: ${file}`);
 
     // Validate the file path to prevent directory traversal
-    if (file.includes('..') || path.isAbsolute(file)) {
+    if (!this.isValidPath(file) || file.includes('..') || path.isAbsolute(file)) {
       throw new Error('Invalid file path');
     }
 
